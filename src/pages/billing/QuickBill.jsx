@@ -54,68 +54,256 @@ function normalizeCustomer(customer) {
    BARCODE SCANNER MODAL
 ───────────────────────────────────────────────────────────────────────────── */
 function BarcodeScanner({ products, onFound, onClose, scanFeedback }) {
-  const videoRef  = useRef(null);
+  const videoRef = useRef(null);
   const streamRef = useRef(null);
-  const rafRef    = useRef(null);
+  const rafRef = useRef(null);
   const detectorRef = useRef(null);
   const lastScanRef = useRef({ barcode: null, time: 0 });
 
-  const [state, setState] = useState(() => "BarcodeDetector" in window ? "requesting" : "unsupported");
+  const [state, setState] = useState(() =>
+    typeof window !== "undefined" && "BarcodeDetector" in window ? "requesting" : "unsupported"
+  );
+  const [errorMessage, setErrorMessage] = useState("");
 
   const stopCamera = useCallback(() => {
-    if (rafRef.current)    cancelAnimationFrame(rafRef.current);
-    if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
   }, []);
 
-  const handleClose = useCallback(() => { stopCamera(); onClose(); }, [stopCamera, onClose]);
+  const handleClose = useCallback(() => {
+    stopCamera();
+    onClose();
+  }, [stopCamera, onClose]);
 
   useEffect(() => {
-    // Check BarcodeDetector support
-    if (!("BarcodeDetector" in window)) {
-      return;
-    }
-    detectorRef.current = new window.BarcodeDetector({ formats: ["ean_13", "ean_8", "code_128", "qr_code", "upc_a"] });
+    let isCancelled = false;
 
-    navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: { ideal: "environment" } } })
-      .then((stream) => {
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
+    async function initializeScanner() {
+      // 1. Verify BarcodeDetector support
+      if (!("BarcodeDetector" in window)) {
+        if (!isCancelled) {
+          setState("unsupported");
+          setErrorMessage("Barcode detector is not supported on this browser. Use Chrome or Edge on Android.");
         }
-        setState("scanning");
-        scanLoop();
-      })
-      .catch((err) => {
-        setState(err.name === "NotAllowedError" ? "denied" : "error");
-      });
-
-    function scanLoop() {
-      if (!videoRef.current || !detectorRef.current) return;
-      if (videoRef.current.readyState < 2) {
-        rafRef.current = requestAnimationFrame(scanLoop);
         return;
       }
-      detectorRef.current
-        .detect(videoRef.current)
-        .then((barcodes) => {
-          if (barcodes.length > 0) {
-            const raw = barcodes[0].rawValue;
-            const now = Date.now();
-            if (raw !== lastScanRef.current.barcode || (now - lastScanRef.current.time > 2000)) {
-              lastScanRef.current = { barcode: raw, time: now };
-              onFound(raw);
-            }
+
+      try {
+        if (window.BarcodeDetector.getSupportedFormats) {
+          const supported = await window.BarcodeDetector.getSupportedFormats();
+          const targetFormats = ["ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "qr_code"];
+          const formats = targetFormats.filter((fmt) => supported.includes(fmt));
+          detectorRef.current = new window.BarcodeDetector({ formats: formats.length > 0 ? formats : supported });
+        } else {
+          detectorRef.current = new window.BarcodeDetector({ formats: ["ean_13", "ean_8", "code_128", "upc_a", "qr_code"] });
+        }
+      } catch {
+        try {
+          detectorRef.current = new window.BarcodeDetector();
+        } catch {
+          if (!isCancelled) {
+            setState("unsupported");
+            setErrorMessage("Could not initialize barcode detector.");
           }
-          rafRef.current = requestAnimationFrame(scanLoop);
-        })
-        .catch(() => { rafRef.current = requestAnimationFrame(scanLoop); });
+          return;
+        }
+      }
+
+      if (isCancelled) return;
+
+      // 2. Verify mediaDevices support
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (!isCancelled) {
+          setState("unsupported");
+          setErrorMessage("Camera access is not supported on this browser.");
+        }
+        return;
+      }
+
+      // 3. Camera initialization with rear/environment camera preferred and audio disabled
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false,
+        });
+      } catch (err) {
+        if (isCancelled) return;
+        // If overconstrained (e.g. device has no environment camera), retry with standard video
+        if (err.name === "OverconstrainedError" || err.name === "ConstraintNotSatisfiedError") {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: false,
+            });
+          } catch (retryErr) {
+            if (!isCancelled) handleCameraError(retryErr);
+            return;
+          }
+        } else {
+          if (!isCancelled) handleCameraError(err);
+          return;
+        }
+      }
+
+      if (isCancelled) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+
+      // 4. Validate video track existence and live state
+      const tracks = stream.getVideoTracks();
+      if (!tracks || tracks.length === 0 || tracks[0].readyState !== "live") {
+        stream.getTracks().forEach((t) => t.stop());
+        if (!isCancelled) {
+          setState("error");
+          setErrorMessage("Camera is currently unavailable or video track is inactive.");
+        }
+        return;
+      }
+
+      streamRef.current = stream;
+
+      // 5. Attach stream to HTML video element (guaranteed to be mounted in DOM)
+      const video = videoRef.current;
+      if (!video) {
+        if (!isCancelled) {
+          setState("error");
+          setErrorMessage("Video display element not found.");
+        }
+        return;
+      }
+
+      video.srcObject = stream;
+      video.muted = true;
+      video.playsInline = true;
+      video.autoplay = true;
+
+      // 6. Start video playback
+      try {
+        await video.play();
+      } catch {
+        if (isCancelled) return;
+      }
+
+      if (isCancelled) return;
+
+      // 7. Wait for video metadata & readiness (readyState >= 2 and positive dimensions)
+      if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
+        await new Promise((resolve) => {
+          let resolved = false;
+          const finish = () => {
+            if (!resolved) {
+              resolved = true;
+              video.removeEventListener("loadeddata", finish);
+              video.removeEventListener("canplay", finish);
+              video.removeEventListener("loadedmetadata", finish);
+              resolve();
+            }
+          };
+          video.addEventListener("loadedmetadata", finish, { once: true });
+          video.addEventListener("loadeddata", finish, { once: true });
+          video.addEventListener("canplay", finish, { once: true });
+          setTimeout(finish, 1500);
+        });
+      }
+
+      if (isCancelled) return;
+
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        await new Promise((r) => requestAnimationFrame(r));
+      }
+
+      if (isCancelled) return;
+
+      setState("scanning");
+      startBarcodeDetection();
     }
 
-    return () => stopCamera();
-  }, [onFound, products, stopCamera]);
+    function handleCameraError(err) {
+      let msg = "Unable to start camera. Please try again.";
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        setState("denied");
+        msg = "Camera permission is required to scan barcodes. Please allow camera access in browser settings.";
+      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        setState("error");
+        msg = "No camera was found on this device.";
+      } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+        setState("error");
+        msg = "Camera is currently being used by another application.";
+      } else if (err.name === "OverconstrainedError" || err.name === "ConstraintNotSatisfiedError") {
+        setState("error");
+        msg = "Camera configuration is not supported on this device.";
+      } else if (err.name === "SecurityError") {
+        setState("error");
+        msg = "Camera access is restricted by browser security policy.";
+      } else if (err.name === "AbortError") {
+        setState("error");
+        msg = "Camera initialization was aborted.";
+      } else {
+        setState("error");
+      }
+      setErrorMessage(msg);
+    }
+
+    function startBarcodeDetection() {
+      let isDetecting = false;
+      let lastDetectTimestamp = 0;
+
+      function scanLoop(timestamp) {
+        if (isCancelled || !videoRef.current || !detectorRef.current) return;
+        const vid = videoRef.current;
+
+        if (vid.readyState >= 2 && vid.videoWidth > 0 && !isDetecting) {
+          if (!lastDetectTimestamp || timestamp - lastDetectTimestamp >= 100) {
+            lastDetectTimestamp = timestamp;
+            isDetecting = true;
+
+            detectorRef.current
+              .detect(vid)
+              .then((barcodes) => {
+                isDetecting = false;
+                if (isCancelled) return;
+                if (barcodes && barcodes.length > 0) {
+                  const raw = barcodes[0].rawValue;
+                  const now = Date.now();
+                  if (raw && (raw !== lastScanRef.current.barcode || now - lastScanRef.current.time > 2000)) {
+                    lastScanRef.current = { barcode: raw, time: now };
+                    if (navigator.vibrate) {
+                      try { navigator.vibrate(80); } catch (_) {}
+                    }
+                    onFound(raw);
+                  }
+                }
+              })
+              .catch(() => {
+                isDetecting = false;
+              });
+          }
+        }
+
+        rafRef.current = requestAnimationFrame(scanLoop);
+      }
+
+      rafRef.current = requestAnimationFrame(scanLoop);
+    }
+
+    initializeScanner();
+
+    return () => {
+      isCancelled = true;
+      stopCamera();
+    };
+  }, [onFound, stopCamera]);
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-slate-950/95 backdrop-blur-sm">
@@ -125,8 +313,11 @@ function BarcodeScanner({ products, onFound, onClose, scanFeedback }) {
           <h2 className="text-base font-bold text-white">Barcode Scanner</h2>
           <p className="text-xs text-slate-400 mt-0.5">Point camera at product barcode</p>
         </div>
-        <button type="button" onClick={handleClose}
-          className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors">
+        <button
+          type="button"
+          onClick={handleClose}
+          className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
+        >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -135,36 +326,59 @@ function BarcodeScanner({ products, onFound, onClose, scanFeedback }) {
 
       {/* Camera / state area */}
       <div className="flex-1 flex flex-col items-center justify-center px-5 pb-8 gap-5">
-        {(state === "requesting") && (
-          <div className="flex flex-col items-center gap-3 text-slate-400">
-            <div className="w-10 h-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-            <p className="text-sm">Requesting camera access…</p>
-          </div>
-        )}
+        {(state === "requesting" || state === "scanning") && (
+          <div className="relative w-full max-w-sm aspect-square rounded-2xl overflow-hidden bg-slate-950 border border-slate-700/60 shadow-2xl flex items-center justify-center">
+            {/* Real HTML video element - always mounted in DOM */}
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover block"
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
 
-        {state === "scanning" && (
-          <div className="relative w-full max-w-sm aspect-square rounded-2xl overflow-hidden bg-black">
-            <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
-            {/* Scanning frame overlay */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="relative w-48 h-48">
-                {/* Corner markers */}
-                {["top-0 left-0","top-0 right-0","bottom-0 left-0","bottom-0 right-0"].map((pos, i) => (
-                  <span key={i} className={`absolute w-7 h-7 border-blue-400 ${pos} ${
-                    i === 0 ? "border-t-2 border-l-2 rounded-tl-md"
-                    : i === 1 ? "border-t-2 border-r-2 rounded-tr-md"
-                    : i === 2 ? "border-b-2 border-l-2 rounded-bl-md"
-                    : "border-b-2 border-r-2 rounded-br-md"
-                  }`} />
-                ))}
-                {/* Scanning line */}
-                <div className="absolute inset-x-0 top-1/2 h-0.5 bg-blue-400/70 animate-pulse" />
+            {/* Spinner overlay while requesting / initializing camera */}
+            {state === "requesting" && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm gap-3 text-slate-300">
+                <div className="w-10 h-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                <p className="text-sm font-medium">Starting camera...</p>
               </div>
-            </div>
-            {/* Scan label */}
-            <div className="absolute bottom-3 inset-x-0 text-center">
-              <span className="text-xs text-white/70 bg-black/40 px-3 py-1 rounded-full">Scanning continuously…</span>
-            </div>
+            )}
+
+            {/* Active Scanning frame overlay */}
+            {state === "scanning" && (
+              <>
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none bg-transparent">
+                  <div className="relative w-48 h-48">
+                    {/* Corner markers */}
+                    {["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"].map((pos, i) => (
+                      <span
+                        key={i}
+                        className={`absolute w-7 h-7 border-blue-400 ${pos} ${
+                          i === 0
+                            ? "border-t-2 border-l-2 rounded-tl-md"
+                            : i === 1
+                            ? "border-t-2 border-r-2 rounded-tr-md"
+                            : i === 2
+                            ? "border-b-2 border-l-2 rounded-bl-md"
+                            : "border-b-2 border-r-2 rounded-br-md"
+                        }`}
+                      />
+                    ))}
+                    {/* Scanning laser line */}
+                    <div className="absolute inset-x-0 top-1/2 h-0.5 bg-blue-400/80 animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+                  </div>
+                </div>
+
+                {/* Scan label */}
+                <div className="absolute bottom-3 inset-x-0 z-10 text-center pointer-events-none">
+                  <span className="text-xs font-medium text-white/90 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-sm">
+                    Scanning continuously…
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -176,8 +390,8 @@ function BarcodeScanner({ products, onFound, onClose, scanFeedback }) {
               </svg>
             </div>
             <p className="text-sm font-semibold text-white">Barcode scanner not supported</p>
-            <p className="text-xs text-slate-400">Use Chrome or Edge browser for barcode scanning. You can still search products manually.</p>
-            <button onClick={handleClose} className="mt-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition-colors">Close</button>
+            <p className="text-xs text-slate-400">{errorMessage || "Use Chrome or Edge browser on Android for barcode scanning. You can still search products manually."}</p>
+            <button type="button" onClick={handleClose} className="mt-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition-colors cursor-pointer">Close</button>
           </div>
         )}
 
@@ -189,22 +403,27 @@ function BarcodeScanner({ products, onFound, onClose, scanFeedback }) {
               </svg>
             </div>
             <p className="text-sm font-semibold text-white">Camera permission denied</p>
-            <p className="text-xs text-slate-400">Please allow camera access in your browser settings, then try again.</p>
-            <button onClick={handleClose} className="mt-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition-colors">Close</button>
+            <p className="text-xs text-slate-400">{errorMessage || "Camera permission is required to scan barcodes. Please allow camera access in your browser settings, then try again."}</p>
+            <button type="button" onClick={handleClose} className="mt-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition-colors cursor-pointer">Close</button>
           </div>
         )}
 
         {state === "error" && (
           <div className="text-center space-y-3 max-w-xs">
+            <div className="w-14 h-14 rounded-2xl bg-rose-900/30 flex items-center justify-center mx-auto">
+              <svg className="w-7 h-7 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
             <p className="text-sm font-semibold text-white">Camera error</p>
-            <p className="text-xs text-slate-400">Could not access camera. Please check your device settings.</p>
-            <button onClick={handleClose} className="mt-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition-colors">Close</button>
+            <p className="text-xs text-slate-400">{errorMessage || "Could not access camera. Please check your device settings."}</p>
+            <button type="button" onClick={handleClose} className="mt-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition-colors cursor-pointer">Close</button>
           </div>
         )}
 
         {/* Scan feedback */}
         {scanFeedback && state === "scanning" && (
-          <div className="w-full max-w-sm px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 backdrop-blur-sm text-center">
+          <div className="w-full max-w-sm px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 backdrop-blur-sm text-center shadow-lg">
             {scanFeedback}
           </div>
         )}
