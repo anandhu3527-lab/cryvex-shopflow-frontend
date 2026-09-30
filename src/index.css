@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy-950: #070d1e;
+  --color-navy-900: #0b132b;
+  --color-navy-850: #111c3d;
+  --color-navy-800: #1c2541;
+  --color-navy-700: #2b3960;
+  --color-navy-600: #3a506b;
+  --color-navy-500: #4f6d91;
+
+  /* animate-fade-in — used by Login, Register, and alert banners */
+  --animate-fade-in: fadeIn 0.25s ease-out both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
