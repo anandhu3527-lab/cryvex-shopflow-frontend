@@ -77,6 +77,7 @@ function BarcodeScanner({ products, onFound, onClose, scanFeedback }) {
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+    lastScanRef.current = { barcode: null, time: 0 };
   }, []);
 
   const handleClose = useCallback(() => {
@@ -276,7 +277,10 @@ function BarcodeScanner({ products, onFound, onClose, scanFeedback }) {
                 if (barcodes && barcodes.length > 0) {
                   const raw = barcodes[0].rawValue;
                   const now = Date.now();
-                  if (raw && (raw !== lastScanRef.current.barcode || now - lastScanRef.current.time > 2000)) {
+                  const SAME_BARCODE_COOLDOWN_MS = 1500;
+                  // Same-barcode cooldown: ignore rapid frame detections of the exact same barcode (~1.5s)
+                  // Different barcodes are accepted immediately without delay
+                  if (raw && (raw !== lastScanRef.current.barcode || now - lastScanRef.current.time > SAME_BARCODE_COOLDOWN_MS)) {
                     lastScanRef.current = { barcode: raw, time: now };
                     if (navigator.vibrate) {
                       try { navigator.vibrate(80); } catch (_) {}
@@ -498,6 +502,10 @@ export default function QuickBill() {
   const [showScanner, setShowScanner] = useState(false);
   const [scanFeedback, setScanFeedback] = useState(null);
 
+  // Synchronous debounce and processing lock refs to prevent multi-frame duplicate increments
+  const isScanningProcessingRef = useRef(false);
+  const lastAcceptedScanRef = useRef({ barcode: null, timestamp: 0 });
+
   /* ── Toast ── */
   const [toast, setToast] = useState({ msg: "", type: "success" });
 
@@ -676,6 +684,37 @@ export default function QuickBill() {
   };
 
   const handleBarcodeFound = useCallback(async (barcode) => {
+    if (!barcode) return;
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 1. PROCESSING LOCK:
+    // Prevent multiple detections across rapid video frames from triggering
+    // simultaneous API requests while a product lookup/addition is already in flight.
+    // ──────────────────────────────────────────────────────────────────────────
+    if (isScanningProcessingRef.current) {
+      return;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 2. SAME-BARCODE DEBOUNCE / COOLDOWN (~1500ms):
+    // When a physical barcode is presented, BarcodeDetector recognizes it across
+    // multiple consecutive frames per second. We ignore repeat detections of the
+    // SAME barcode within 1500ms. DIFFERENT barcodes are never blocked and process
+    // immediately. Intentionally scanning the same barcode after 1.5s increases quantity by 1.
+    // ──────────────────────────────────────────────────────────────────────────
+    const SAME_BARCODE_COOLDOWN_MS = 1500;
+    const now = Date.now();
+    if (
+      lastAcceptedScanRef.current.barcode === barcode &&
+      now - lastAcceptedScanRef.current.timestamp < SAME_BARCODE_COOLDOWN_MS
+    ) {
+      return;
+    }
+
+    // Acquire lock and update timestamp synchronously before starting asynchronous work
+    isScanningProcessingRef.current = true;
+    lastAcceptedScanRef.current = { barcode, timestamp: now };
+
     try {
       const result = await productDataService.getProductByBarcode(barcode);
       const productData = result || null;
@@ -743,6 +782,13 @@ export default function QuickBill() {
           <span className="text-slate-300 text-[10px]">Unable to fetch product. Please try again.</span>
         </div>
       );
+    } finally {
+      // ──────────────────────────────────────────────────────────────────────────
+      // 3. ALWAYS RELEASE LOCK:
+      // Guarantees the processing lock is released upon success, product not found,
+      // out of stock, or API network error so subsequent scans proceed reliably.
+      // ──────────────────────────────────────────────────────────────────────────
+      isScanningProcessingRef.current = false;
     }
   }, [showToast]);
 
@@ -930,6 +976,8 @@ export default function QuickBill() {
           onClose={() => {
             setShowScanner(false);
             setScanFeedback(null);
+            isScanningProcessingRef.current = false;
+            lastAcceptedScanRef.current = { barcode: null, timestamp: 0 };
           }}
         />
       )}
