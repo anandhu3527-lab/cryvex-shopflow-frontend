@@ -99,6 +99,7 @@ export default function ProductDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingVariant, setEditingVariant] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [editName, setEditName] = useState("");
   const [editSellingPrice, setEditSellingPrice] = useState("");
@@ -209,19 +210,20 @@ export default function ProductDetail() {
     return () => { isMounted = false; };
   }, [product]);
 
-  const openEdit = () => {
-    const firstVariant = product.variants[0] || {};
+  const openEdit = (variant) => {
+    const selectedVariant = variant || product.variants[0] || {};
+    setEditingVariant(selectedVariant);
     setEditName(product.name);
-    setEditSellingPrice(firstVariant.selling_price ?? "");
-    setEditOfferPrice(firstVariant.offer_price ?? "");
-    setEditStockQuantity(firstVariant.currentStock ?? "");
+    setEditSellingPrice(selectedVariant.selling_price ?? "");
+    setEditOfferPrice(selectedVariant.offer_price ?? "");
+    setEditStockQuantity(selectedVariant.currentStock ?? "");
     setEditError("");
     setIsEditOpen(true);
   };
 
   const handleEditSubmit = async (event) => {
     event.preventDefault();
-    const firstVariant = product.variants[0] || {};
+    const variantId = editingVariant?.id;
     const name = editName.trim();
     const sellingPrice = getNumber(editSellingPrice);
     const offerPrice = editOfferPrice.trim() === "" ? null : getNumber(editOfferPrice);
@@ -237,19 +239,19 @@ export default function ProductDetail() {
     if (stockQuantity === null || stockQuantity < 0) {
       return setEditError("Stock quantity must be a valid non-negative number.");
     }
-    if (!firstVariant.id) {
+    if (!variantId) {
       return setEditError("This product has no inventory record that can be updated.");
     }
 
     setIsSaving(true);
     setEditError("");
     try {
-      await productApi.updateVariant(firstVariant.id, {
+      await productApi.updateVariant(variantId, {
         product_name: name,
         selling_price: sellingPrice,
         offer_price: offerPrice,
       });
-      await productApi.updateVariantInventory(firstVariant.id, {
+      await productApi.updateVariantInventory(variantId, {
         stock_quantity: stockQuantity,
       });
       await reloadProduct();
@@ -313,7 +315,7 @@ export default function ProductDetail() {
         </div>
         <button
           type="button"
-          onClick={openEdit}
+          onClick={() => openEdit(product.variants[0])}
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -370,6 +372,7 @@ export default function ProductDetail() {
                   <th scope="col" className="px-6 py-3.5 text-right">Stock</th>
                   <th scope="col" className="px-6 py-3.5 text-right">Threshold</th>
                   <th scope="col" className="px-6 py-3.5 text-right">Status</th>
+                  <th scope="col" className="px-6 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -398,6 +401,15 @@ export default function ProductDetail() {
                           <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
                           {stockStatus.label}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(variant)}
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                        >
+                          Edit
+                        </button>
                       </td>
                     </tr>
                   );
@@ -475,7 +487,9 @@ export default function ProductDetail() {
             aria-labelledby="edit-product-title"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <h2 id="edit-product-title" className="text-lg font-bold text-slate-900">Edit Product</h2>
+              <h2 id="edit-product-title" className="text-lg font-bold text-slate-900">
+                Edit Variant {editingVariant?.package_quantity ? `(${editingVariant.package_quantity} ${editingVariant.unit || ""})` : ""}
+              </h2>
               <button
                 type="button"
                 onClick={() => setIsEditOpen(false)}
@@ -509,7 +523,7 @@ export default function ProductDetail() {
                 <input id="edit-offer-price" type="number" inputMode="decimal" step="any" min="0" value={editOfferPrice} onChange={(event) => setEditOfferPrice(event.target.value)} className={inputClassName} />
               </div>
               <div>
-                <label htmlFor="edit-stock-quantity" className="mb-1.5 block text-xs font-semibold text-slate-700">Stock Quantity ({product.variants[0]?.unit || "Units"})</label>
+                <label htmlFor="edit-stock-quantity" className="mb-1.5 block text-xs font-semibold text-slate-700">Stock Quantity ({editingVariant?.unit || "Units"})</label>
                 <input id="edit-stock-quantity" type="number" inputMode="decimal" step="any" min="0" value={editStockQuantity} onChange={(event) => setEditStockQuantity(event.target.value)} className={inputClassName} required />
               </div>
               <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">

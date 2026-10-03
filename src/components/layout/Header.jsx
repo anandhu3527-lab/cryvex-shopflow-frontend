@@ -100,11 +100,10 @@ export default function Header({
   let showEditProfile = false;
   
   if (currentUser) {
+    displayName = currentUser.name || "Staff";
     if (role === "OWNER") {
-      displayName = currentTenant?.name || currentTenant?.business_name || "Shop Name";
       showEditProfile = true;
     } else {
-      displayName = currentUser.name || "Staff";
       showEditProfile = false;
     }
   }
@@ -137,12 +136,10 @@ export default function Header({
   };
 
   const openProfileDialog = () => {
+    setIsProfileDialogOpen(true);
+    loadEmployeeProfile();
     if (showEditProfile) {
-      setIsProfileDialogOpen(true);
       void loadTenantProfile();
-    } else {
-      setIsEmployeeProfileOpen(true);
-      loadEmployeeProfile();
     }
   };
 
@@ -321,81 +318,19 @@ export default function Header({
       </div>
 
       {isProfileDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" role="presentation">
-          <form
-            onSubmit={saveProfile}
-            className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="profile-title"
-            aria-busy={profileLoadStatus === "loading" || isSavingProfile}
-          >
-            <h3 id="profile-title" className="text-base font-bold text-slate-900">Edit Profile</h3>
-            {profileLoadStatus === "loading" ? (
-              <p className="py-8 text-center text-sm text-slate-500" role="status">Loading profile...</p>
-            ) : profileLoadStatus === "error" ? (
-              <div className="mt-4">
-                <button type="button" onClick={loadTenantProfile} className="mt-3 text-sm font-semibold text-blue-700 hover:underline">Retry</button>
-              </div>
-            ) : (
-              <div className="mt-4 grid gap-3">
-                <div>
-                  <label htmlFor="profile-owner-name" className="block text-sm font-medium text-slate-700">Owner Name</label>
-                  <input id="profile-owner-name" type="text" value={profileDraft.name} onChange={(event) => handleProfileFormChange("name", event.target.value)} maxLength={150} required className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-                </div>
-                <div>
-                  <label htmlFor="profile-business-name" className="block text-sm font-medium text-slate-700">Business Name</label>
-                  <input id="profile-business-name" type="text" value={profileDraft.business_name} onChange={(event) => handleProfileFormChange("business_name", event.target.value)} maxLength={200} required className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-                </div>
-                <div>
-                  <label htmlFor="profile-email" className="block text-sm font-medium text-slate-700">Email ID</label>
-                  <input id="profile-email" type="email" value={profileDraft.email} onChange={(event) => handleProfileFormChange("email", event.target.value)} maxLength={255} required className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-                </div>
-                <div>
-                  <label htmlFor="profile-address" className="block text-sm font-medium text-slate-700">Address</label>
-                  <textarea id="profile-address" rows={3} value={profileDraft.address} onChange={(event) => handleProfileFormChange("address", event.target.value)} required className="mt-1.5 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-                </div>
-              </div>
-            )}
-            {profileError && <p className="mt-2 text-sm text-rose-600" role="alert">{profileError}</p>}
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={closeProfileDialog}
-                className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
-                disabled={isSavingProfile}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={isSavingProfile || profileLoadStatus !== "success"}
-              >
-                {isSavingProfile ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {isEmployeeProfileOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4" role="presentation">
-          <div
-            className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="employee-profile-title"
-          >
-            <h3 id="employee-profile-title" className="text-base font-bold text-slate-900">User Profile</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 overflow-y-auto" role="presentation">
+          <div className="w-full max-w-md my-8 rounded-xl border border-slate-200 bg-white p-5 shadow-xl max-h-full overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+            <h3 id="profile-title" className="text-base font-bold text-slate-900 mb-4">User Profile</h3>
+            
+            {/* User Profile Section (Read-Only for both Owner and Employee) */}
             {employeeProfileStatus === "loading" ? (
-              <p className="py-8 text-center text-sm text-slate-500" role="status">Loading profile...</p>
+              <p className="py-4 text-center text-sm text-slate-500" role="status">Loading profile...</p>
             ) : employeeProfileStatus === "error" ? (
-              <div className="mt-4">
-                <button type="button" onClick={loadEmployeeProfile} className="mt-3 text-sm font-semibold text-blue-700 hover:underline">Retry</button>
+              <div className="mt-2">
+                <button type="button" onClick={loadEmployeeProfile} className="text-sm font-semibold text-blue-700 hover:underline">Retry Loading Profile</button>
               </div>
             ) : employeeProfile ? (
-              <div className="mt-4 grid gap-3">
+              <div className="grid gap-3">
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col items-center">
                   <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 font-bold text-xl flex items-center justify-center shadow-xs mb-3">
                     {employeeProfile.name ? employeeProfile.name.charAt(0).toUpperCase() : "?"}
@@ -418,13 +353,50 @@ export default function Header({
                 </div>
               </div>
             ) : null}
-            {profileError && <p className="mt-2 text-sm text-rose-600" role="alert">{profileError}</p>}
-            <div className="mt-5 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setIsEmployeeProfileOpen(false)}
-                className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"
-              >
+
+            {/* Shop Details Section (Editable, only for Owner) */}
+            {showEditProfile && (
+              <form onSubmit={saveProfile} className="mt-6 border-t border-slate-200 pt-4" aria-busy={profileLoadStatus === "loading" || isSavingProfile}>
+                <h4 className="text-sm font-bold text-slate-900 mb-3">Shop Details</h4>
+                {profileLoadStatus === "loading" ? (
+                  <p className="py-4 text-center text-sm text-slate-500" role="status">Loading shop details...</p>
+                ) : profileLoadStatus === "error" ? (
+                  <div className="mt-2">
+                    <button type="button" onClick={loadTenantProfile} className="text-sm font-semibold text-blue-700 hover:underline">Retry Loading Shop</button>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    <div>
+                      <label htmlFor="profile-owner-name" className="block text-sm font-medium text-slate-700">Owner Name</label>
+                      <input id="profile-owner-name" type="text" value={profileDraft.name} onChange={(event) => handleProfileFormChange("name", event.target.value)} maxLength={150} required className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-business-name" className="block text-sm font-medium text-slate-700">Business Name</label>
+                      <input id="profile-business-name" type="text" value={profileDraft.business_name} onChange={(event) => handleProfileFormChange("business_name", event.target.value)} maxLength={200} required className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-email" className="block text-sm font-medium text-slate-700">Email ID</label>
+                      <input id="profile-email" type="email" value={profileDraft.email} onChange={(event) => handleProfileFormChange("email", event.target.value)} maxLength={255} required className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                    </div>
+                    <div>
+                      <label htmlFor="profile-address" className="block text-sm font-medium text-slate-700">Address</label>
+                      <textarea id="profile-address" rows={2} value={profileDraft.address} onChange={(event) => handleProfileFormChange("address", event.target.value)} required className="mt-1.5 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-4 flex justify-end gap-2">
+                  <button type="submit" className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60" disabled={isSavingProfile || profileLoadStatus !== "success"}>
+                    {isSavingProfile ? "Saving..." : "Save Shop Details"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {profileError && <p className="mt-3 text-sm text-rose-600 font-medium text-center" role="alert">{profileError}</p>}
+            
+            <div className="mt-4 border-t border-slate-100 pt-4 flex justify-end">
+              <button type="button" onClick={closeProfileDialog} className="w-full sm:w-auto rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">
                 Close
               </button>
             </div>

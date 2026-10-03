@@ -274,18 +274,24 @@ function BarcodeScanner({ products, onFound, onClose, scanFeedback }) {
               .then((barcodes) => {
                 isDetecting = false;
                 if (isCancelled) return;
+                const now = Date.now();
                 if (barcodes && barcodes.length > 0) {
                   const raw = barcodes[0].rawValue;
-                  const now = Date.now();
-                  const SAME_BARCODE_COOLDOWN_MS = 1500;
-                  // Same-barcode cooldown: ignore rapid frame detections of the exact same barcode (~1.5s)
-                  // Different barcodes are accepted immediately without delay
-                  if (raw && (raw !== lastScanRef.current.barcode || now - lastScanRef.current.time > SAME_BARCODE_COOLDOWN_MS)) {
+                  
+                  // Same-barcode continuous detection prevention:
+                  // Only accept if it's a NEW barcode, or if the old one was cleared.
+                  if (raw !== lastScanRef.current.barcode) {
                     lastScanRef.current = { barcode: raw, time: now };
-                    if (navigator.vibrate) {
-                      try { navigator.vibrate(80); } catch (_) {}
-                    }
                     onFound(raw);
+                  } else {
+                    // Same barcode is still in frame, update time to keep it "active"
+                    lastScanRef.current.time = now;
+                  }
+                } else {
+                  // No barcode in this frame
+                  // If we haven't seen the last barcode for > 500ms, clear it so it can be scanned again
+                  if (lastScanRef.current.barcode && now - lastScanRef.current.time > 500) {
+                    lastScanRef.current = { barcode: null, time: 0 };
                   }
                 }
               })
@@ -695,25 +701,8 @@ export default function QuickBill() {
       return;
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // 2. SAME-BARCODE DEBOUNCE / COOLDOWN (~1500ms):
-    // When a physical barcode is presented, BarcodeDetector recognizes it across
-    // multiple consecutive frames per second. We ignore repeat detections of the
-    // SAME barcode within 1500ms. DIFFERENT barcodes are never blocked and process
-    // immediately. Intentionally scanning the same barcode after 1.5s increases quantity by 1.
-    // ──────────────────────────────────────────────────────────────────────────
-    const SAME_BARCODE_COOLDOWN_MS = 1500;
-    const now = Date.now();
-    if (
-      lastAcceptedScanRef.current.barcode === barcode &&
-      now - lastAcceptedScanRef.current.timestamp < SAME_BARCODE_COOLDOWN_MS
-    ) {
-      return;
-    }
-
-    // Acquire lock and update timestamp synchronously before starting asynchronous work
+    // Acquire lock to prevent overlapping API calls for rapid consecutive scans
     isScanningProcessingRef.current = true;
-    lastAcceptedScanRef.current = { barcode, timestamp: now };
 
     try {
       const result = await productDataService.getProductByBarcode(barcode);
@@ -750,36 +739,99 @@ export default function QuickBill() {
         const newQty = currentQty + 1;
         
         if (currentStock > 0 && newQty > currentStock) {
-          setScanFeedback(
-            <div className="flex flex-col gap-0.5">
-              <span className="font-bold text-amber-400">Product is out of stock.</span>
-              <span className="text-slate-300 text-[10px]">{productData.name} (Max: {currentStock})</span>
-            </div>
-          );
+          setTimeout(() => {
+            setScanFeedback(
+              <div className="flex flex-col gap-0.5">
+                <span className="font-bold text-amber-400">Product is out of stock.</span>
+                <span className="text-slate-300 text-[10px]">{productData.name} (Max: {currentStock})</span>
+              </div>
+            );
+          }, 0);
           return prev;
         }
 
-        setScanFeedback(
-          <div className="flex flex-col gap-0.5">
-            <span className="text-slate-300 text-[10px] uppercase tracking-wider">Last scanned</span>
-            <span className="font-bold text-emerald-400">{productData.name}</span>
-            <span className="text-white text-[10px]">+1 added (Qty: {newQty})</span>
-          </div>
-        );
+        setTimeout(() => {
+          setScanFeedback(
+            <div className="flex flex-col gap-0.5">
+              <span className="text-slate-300 text-[10px] uppercase tracking-wider">Last scanned</span>
+              <span className="font-bold text-emerald-400">{productData.name}</span>
+              <span className="text-white text-[10px]">+1 added (Qty: {newQty})</span>
+            </div>
+          );
+          
+          showToast(`✓ Product Added\n${productData.name} × 1`, "success");
+          
+          if (typeof navigator !== "undefined" && navigator.vibrate) {
+            try { navigator.vibrate(50); } catch (_) {}
+          }
+          
+          try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.02);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.15);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.15);
+          } catch (e) {}
+        }, 0);
 
         if (ex) {
           return prev.map((i) => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
         }
         return [...prev, { ...product, qty: 1, disc: 0 }];
       });
-      
-      // Optionally also show a subtle UI toast
-      showToast(`✓ Scanned: ${productData.name}`);
     } catch (error) {
+      // Inspect the HTTP status from AppError.details.status (set by apiClient)
+      // to distinguish business-level "not found" from real technical failures.
+      const httpStatus = error?.details?.status;
+      const rawMsg = (error?.message || "").toLowerCase();
+      const isNetworkError =
+        !httpStatus &&
+        (rawMsg.includes("network") ||
+          rawMsg.includes("failed to fetch") ||
+          rawMsg.includes("timeout") ||
+          rawMsg.includes("aborted") ||
+          error?.name === "AbortError");
+
+      let feedbackTitle;
+      let feedbackBody;
+
+      if (httpStatus === 404) {
+        // Expected business case: barcode is not registered in this shop's products
+        feedbackTitle = <span className="font-bold text-amber-400">Product not found</span>;
+        feedbackBody = <span className="text-slate-300 text-[10px]">This barcode is not registered in your products.</span>;
+      } else if (httpStatus === 401) {
+        feedbackTitle = <span className="font-bold text-rose-400">Session expired</span>;
+        feedbackBody = <span className="text-slate-300 text-[10px]">Your session has expired. Please log in again.</span>;
+      } else if (httpStatus === 403) {
+        feedbackTitle = <span className="font-bold text-rose-400">Access denied</span>;
+        feedbackBody = <span className="text-slate-300 text-[10px]">You don't have permission to perform this action.</span>;
+      } else if (isNetworkError) {
+        feedbackTitle = <span className="font-bold text-rose-400">Network error</span>;
+        feedbackBody = <span className="text-slate-300 text-[10px]">Please check your connection and try again.</span>;
+      } else if (httpStatus >= 500) {
+        feedbackTitle = <span className="font-bold text-rose-400">Server error</span>;
+        feedbackBody = <span className="text-slate-300 text-[10px]">Unable to check this barcode. Please try again.</span>;
+      } else {
+        feedbackTitle = <span className="font-bold text-rose-400">Unable to check barcode</span>;
+        feedbackBody = <span className="text-slate-300 text-[10px]">Please try again.</span>;
+      }
+
       setScanFeedback(
         <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-rose-400">API Error</span>
-          <span className="text-slate-300 text-[10px]">Unable to fetch product. Please try again.</span>
+          {feedbackTitle}
+          {feedbackBody}
         </div>
       );
     } finally {
