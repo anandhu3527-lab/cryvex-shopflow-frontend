@@ -1,0 +1,17 @@
+{
+  "name": "CRYVEX SHOPFLOW",
+  "short_name": "SHOPFLOW",
+  "description": "Simple shop management, billing, inventory and customer management.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e40af",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
