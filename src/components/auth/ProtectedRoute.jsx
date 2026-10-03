@@ -18,8 +18,13 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <p className="text-sm font-medium text-slate-500 animate-pulse">Loading...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 gap-6">
+        <img
+          src="/cryvex-shopflow-logo.jpeg"
+          alt="CRYVEX SHOPFLOW"
+          style={{ width: "min(70vw, 280px)", height: "auto" }}
+          className="object-contain animate-pulse"
+        />
       </div>
     );
   }
