@@ -1,0 +1,372 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-blue: #075bff;
+  --color-electric-blue: #1687ff;
+  --color-deep-blue: #123b8f;
+  --color-soft-blue: #eaf3ff;
+  --color-very-light-blue: #f5f9ff;
+  --color-app-bg: #f7faff;
+  --color-surface: #ffffff;
+  --color-text-primary: #102a56;
+  --color-text-secondary: #64748b;
+  --color-app-border: #e2e8f0;
+  --color-app-success: #22c55e;
+  --color-app-warning: #f59e0b;
+  --color-app-error: #ef4444;
+  --color-cyan-accent: #22d3ee;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --animate-fade-in: fadeIn 0.25s ease-out both;
+  --animate-slide-up: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUpSheet {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Mobile bottom-sheet notification panel */
+.notification-sheet {
+  animation: slideUpSheet 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (min-width: 640px) {
+  .notification-sheet {
+    animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+/* ── Auth Card Slide Transitions (card only, background stays fixed) ── */
+@keyframes authCardSlideInRight {
+  from { opacity: 0; transform: translateX(80px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes authCardSlideOutLeft {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-80px); }
+}
+@keyframes authCardSlideOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(80px); }
+}
+
+/* Card enters from right and settles in place */
+.auth-slide-in-right {
+  animation: authCardSlideInRight 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* Card exits to left (Login → Register: go forward) */
+.auth-slide-out-left {
+  animation: authCardSlideOutLeft 0.28s cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+/* Card exits to right (Register → Login: go back) */
+.auth-slide-out-right {
+  animation: authCardSlideOutRight 0.28s cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+
+/* Base Body Styles */
+body {
+  background-color: #f7faff;
+  color: #102a56;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar for sleek white SaaS feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* White SaaS Card Utilities */
+.white-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px -2px rgba(7, 91, 255, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.white-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -4px rgba(7, 91, 255, 0.09), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+}
+
+/* Primary Button Styling */
+.btn-primary {
+  background: linear-gradient(135deg, #075bff 0%, #1687ff 100%);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 14px;
+  padding: 0.65rem 1.25rem;
+  box-shadow: 0 4px 14px 0 rgba(7, 91, 255, 0.28);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(7, 91, 255, 0.38);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* Secondary Button Styling */
+.btn-secondary {
+  background: #ffffff;
+  color: #075bff;
+  border: 1px solid #e2e8f0;
+  font-weight: 600;
+  border-radius: 14px;
+  padding: 0.65rem 1.25rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #f8faff;
+  border-color: #075bff;
+  transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* Input Styles */
+.input-field {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0.65rem 1rem;
+  color: #102a56;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #075bff;
+  box-shadow: 0 0 0 3px rgba(7, 91, 255, 0.12);
+}
+
+.input-field::placeholder {
+  color: #94a3b8;
+}
+
+/* 3D Transform & Perspective Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-1500 {
+  perspective: 1500px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.backface-visible {
+  backface-visibility: visible;
+}
+
+/* 3D Animations */
+@keyframes float3D {
+  0%, 100% {
+    transform: translateY(0px) rotateX(12deg) rotateY(-18deg);
+  }
+  50% {
+    transform: translateY(-8px) rotateX(16deg) rotateY(-12deg);
+  }
+}
+
+@keyframes spin3DOrbit {
+  0% {
+    transform: rotateX(-12deg) rotateY(0deg);
+  }
+  100% {
+    transform: rotateX(-12deg) rotateY(360deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+
+.animate-float-3d {
+  animation: float3D 6s ease-in-out infinite;
+}
+
+.animate-spin-3d-orbit {
+  animation: spin3DOrbit 18s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(0.4deg);
+  }
+}
+
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: floatGentle 4.5s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 6s ease-in-out infinite;
+}
+
+/* Gradient Grid Background Patterns */
+.bg-gradient-mesh {
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(7, 91, 255, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(147, 51, 234, 0.07) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(34, 197, 94, 0.06) 0px, transparent 50%);
+}
+
+.card-gradient-border {
+  position: relative;
+  background: #ffffff;
+  border-radius: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 1.3rem;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(7, 91, 255, 0.35), rgba(168, 85, 247, 0.25), rgba(34, 197, 94, 0.2));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.card-gradient-border:hover::before {
+  opacity: 1;
+  background: linear-gradient(135deg, rgba(7, 91, 255, 0.7), rgba(168, 85, 247, 0.6), rgba(6, 182, 212, 0.6));
+}
+
+/* Sequential Blinking Dots Animation for Startup Splash Screen */
+@keyframes splashDotPulse {
+  0%, 80%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.animate-splash-dot-1 {
+  animation: splashDotPulse 1.2s infinite ease-in-out;
+  animation-delay: 0s;
+}
+
+.animate-splash-dot-2 {
+  animation: splashDotPulse 1.2s infinite ease-in-out;
+  animation-delay: 0.2s;
+}
+
+.animate-splash-dot-3 {
+  animation: splashDotPulse 1.2s infinite ease-in-out;
+  animation-delay: 0.4s;
+}
