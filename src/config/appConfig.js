@@ -17,9 +17,9 @@ export const APP_CONFIG = {
       import.meta.env.VITE_API_BASE_URL !== undefined && import.meta.env.VITE_API_BASE_URL !== ""
         ? import.meta.env.VITE_API_BASE_URL
         : import.meta.env.PROD
-          ? "https://shopflowbackend-production.up.railway.app"
+          ? "https://shopflow-backend-finaltest.onrender.com"
           : "",
-    docsUrl: "https://shopflowbackend-production.up.railway.app/docs",
+    docsUrl: "https://shopflow-backend-finaltest.onrender.com/docs",
     timeoutMs: 15000,
   },
   defaultPagination: {
