@@ -610,13 +610,13 @@ export default function Header({
           onClick={(e) => { if (e.target === e.currentTarget) closeProfileDialog(); }}
         >
           <div
-            className="mt-16 mr-4 w-full max-w-sm rounded-3xl border border-[#E2E8F0] bg-white shadow-2xl overflow-hidden animate-slide-up"
+            className="mt-16 mr-4 w-full max-w-sm max-h-[calc(100vh-9rem)] lg:max-h-[calc(100vh-5rem)] rounded-3xl border border-[#E2E8F0] bg-white shadow-2xl overflow-hidden animate-slide-up flex flex-col"
             role="dialog"
             aria-modal="true"
             aria-labelledby="profile-title"
           >
             {/* Dialog Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#F1F5F9] bg-gradient-to-r from-[#F8FAFC] to-white">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#F1F5F9] bg-gradient-to-r from-[#F8FAFC] to-white shrink-0">
               <h3 id="profile-title" className="text-sm font-extrabold text-[#102A56]">
                 {showEditProfile ? "Shop Account" : "My Profile"}
               </h3>
@@ -632,7 +632,7 @@ export default function Header({
               </button>
             </div>
 
-            <div className="p-5 space-y-4 max-h-[calc(100vh-8rem)] overflow-y-auto">
+            <div className="p-5 space-y-4 flex-1 overflow-y-auto overscroll-contain">
               {/* Profile Card */}
               {employeeProfileStatus === "loading" ? (
                 <div className="flex items-center justify-center py-8">
@@ -737,7 +737,7 @@ export default function Header({
             </div>
 
             {/* Dialog Footer */}
-            <div className="border-t border-[#F1F5F9] px-5 py-3 bg-[#FAFBFC] flex items-center justify-between gap-3">
+            <div className="border-t border-[#F1F5F9] px-5 py-3 bg-[#FAFBFC] flex items-center justify-between gap-3 shrink-0">
 <button
                 type="button"
                 onClick={handleSignOut}
