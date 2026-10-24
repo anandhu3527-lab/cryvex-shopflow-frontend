@@ -24,7 +24,10 @@ import DailyPriceUpdate from "../pages/products/DailyPriceUpdate";
 import BillHistory from "../pages/billing/BillHistory";
 import BillDetail from "../pages/billing/BillDetail";
 import AddProduct from "../pages/products/AddProduct";
+<<<<<<< HEAD
 import AddProductVariant from "../pages/products/AddProductVariant";
+=======
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 import AddEmployee from "../pages/employees/AddEmployee";
 
 /**
@@ -89,8 +92,11 @@ export default function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/add" element={<AddProduct />} />
+<<<<<<< HEAD
         <Route path="/products/:productId/variants/new" element={<AddProductVariant />} />
         <Route path="/products/variants/new" element={<AddProductVariant />} />
+=======
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
         <Route path="/products/detail" element={<ProductDetail />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/products/:productId" element={<ProductDetail />} />
@@ -98,6 +104,14 @@ export default function AppRoutes() {
         <Route path="/quick-bill" element={<QuickBill />} />
         <Route path="/bill-history" element={<BillHistory />} />
         <Route path="/bills/:id" element={<BillDetail />} />
+<<<<<<< HEAD
+=======
+        <Route path="/report" element={<Navigate to="/reports" replace />} />
+        <Route path="/reports" element={<ReportsHub />} />
+        <Route path="/reports/monthly" element={<MonthlyReport />} />
+        <Route path="/reports/weekly" element={<WeeklyReport />} />
+        <Route path="/reports/daily" element={<DailyReport />} />
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
         <Route path="/customers" element={<Customers />} />
         <Route path="/customers/:customerId" element={<CustomerDetailPage />} />
         <Route path="/kadan" element={<Kadan />} />
@@ -107,11 +121,14 @@ export default function AppRoutes() {
       {/* Owner-only routes */}
       <Route element={<OwnerOnlyLayout />}>
         <Route path="/employees/add" element={<AddEmployee />} />
+<<<<<<< HEAD
         <Route path="/report" element={<Navigate to="/reports" replace />} />
         <Route path="/reports" element={<ReportsHub />} />
         <Route path="/reports/monthly" element={<MonthlyReport />} />
         <Route path="/reports/weekly" element={<WeeklyReport />} />
         <Route path="/reports/daily" element={<DailyReport />} />
+=======
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       </Route>
 
       {/* Fallback */}

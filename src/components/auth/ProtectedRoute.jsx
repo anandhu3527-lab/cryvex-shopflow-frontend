@@ -29,10 +29,15 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     );
   }
 
+<<<<<<< HEAD
   if (allowedRoles) {
     if (!currentUser?.role || !allowedRoles.includes(currentUser.role)) {
       return <Navigate to="/dashboard" replace />;
     }
+=======
+  if (allowedRoles && currentUser && !allowedRoles.includes(currentUser.role)) {
+    return <Navigate to="/dashboard" replace />;
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   }
 
   return children;

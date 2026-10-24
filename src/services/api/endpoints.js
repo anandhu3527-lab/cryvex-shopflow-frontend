@@ -25,7 +25,10 @@ export const ENDPOINTS = {
     DETAIL: (id) => `/api/v1/products/${id}`,
     BARCODE: (barcode) => `/api/v1/products/barcode/${encodeURIComponent(barcode)}`,
     VARIANT: (id) => `/api/v1/products/variant/${id}`,
+<<<<<<< HEAD
     CREATE_VARIANT: (id) => `/api/v1/products/${id}/variants`,
+=======
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     UPDATE_INVENTORY: (id) => `/api/v1/products/variants/${id}/inventory`,
     CATEGORIES: "/api/v1/categories",
   },

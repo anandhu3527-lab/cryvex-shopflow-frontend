@@ -22,15 +22,24 @@ const ROUTE_TITLES = {
   "/reports/daily": "Daily Report",
   "/customers": "Customers",
   "/kadan": "Kadan Management",
+<<<<<<< HEAD
   "/daily-price-update": "Daily Price Changes",
   "/profile": "User Profile",
   "/employees/add": "Add Employee",
   "/products/variants/new": "Add Product Variant",
+=======
+  "/daily-price-update": "Daily Price Update",
+  "/profile": "User Profile",
+  "/employees/add": "Add Employee",
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 };
 
 function getRouteTitle(pathname) {
   if (ROUTE_TITLES[pathname]) return ROUTE_TITLES[pathname];
+<<<<<<< HEAD
   if (pathname.includes("/variants/new")) return "Add Product Variant";
+=======
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   if (pathname.startsWith("/reports")) return "Sales Reports";
   if (pathname.startsWith("/products/")) return "Product Details";
   if (pathname.startsWith("/customers/")) return "Customer Details";
@@ -42,20 +51,32 @@ export default function MerchantLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentUser } = useAuth();
   const location = useLocation();
+<<<<<<< HEAD
   const isOwner = currentUser?.role === "OWNER";
+=======
+  const role = currentUser?.role || "OWNER";
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 
   const title = getRouteTitle(location.pathname);
 
   const allowedItems = navigationItems.filter((item) => {
+<<<<<<< HEAD
     if (!isOwner) {
       if (item.label === "Add Employee") return false;
       if (item.label === "Reports" || item.path.startsWith("/report")) return false;
     }
+=======
+    if (role !== "OWNER" && item.label === "Add Employee") return false;
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     return true;
   });
 
   return (
+<<<<<<< HEAD
     <div className="flex h-screen bg-[#F7FAFF] text-[#102A56] relative overflow-hidden font-sans">
+=======
+    <div className="flex min-h-screen bg-[#F7FAFF] text-[#102A56] relative overflow-x-hidden font-sans">
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       {/* ── Ambient Cryvex ShopFlow Store Background Wallpaper across ALL pages ── */}
       <div
         className="fixed inset-0 z-0 pointer-events-none select-none overflow-hidden"

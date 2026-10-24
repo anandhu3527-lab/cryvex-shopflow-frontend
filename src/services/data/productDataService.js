@@ -5,6 +5,10 @@
  */
 
 import { productApi } from "../api/productApi";
+<<<<<<< HEAD
+=======
+import { normalizeTaxRate } from "../../validations/productValidation";
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 import { queryCache } from "./queryCache";
 
 
@@ -289,6 +293,7 @@ export const productDataService = {
   },
 
   /**
+<<<<<<< HEAD
    * Add Variant to an existing product
    * POST /api/v1/products/{product_id}/variants
    */
@@ -317,6 +322,8 @@ export const productDataService = {
   },
 
   /**
+=======
+>>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
    * Update Variant
    * PATCH /api/v1/products/variants/{variant_id}
    */
