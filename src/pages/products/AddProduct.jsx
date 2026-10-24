@@ -43,15 +43,11 @@ function BarcodeScanner({ onFound, onClose }) {
   const mountedRef = useRef(true);   // prevent state updates after unmount
 
   // States: "requesting" | "scanning" | "denied" | "nocamera" | "unsupported" | "error"
-<<<<<<< HEAD
   const [scanState, setScanState] = useState(() =>
     typeof navigator !== "undefined" && !navigator.mediaDevices?.getUserMedia
       ? "unsupported"
       : "requesting"
   );
-=======
-  const [scanState, setScanState] = useState("requesting");
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   const [lastError, setLastError] = useState("");
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -65,11 +61,7 @@ function BarcodeScanner({ onFound, onClose }) {
   const stopCamera = useCallback(() => {
     if (frameRef.current) { cancelAnimationFrame(frameRef.current); frameRef.current = null; }
     if (streamRef.current) { streamRef.current.getTracks().forEach((t) => t.stop()); streamRef.current = null; }
-<<<<<<< HEAD
     if (zxingReaderRef.current) { try { zxingReaderRef.current.reset(); } catch { /* ignore */ } zxingReaderRef.current = null; }
-=======
-    if (zxingReaderRef.current) { try { zxingReaderRef.current.reset(); } catch (_) { } zxingReaderRef.current = null; }
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     if (videoRef.current) { videoRef.current.srcObject = null; }
   }, []);
 
@@ -120,11 +112,7 @@ function BarcodeScanner({ onFound, onClose }) {
         await videoRef.current.play().catch(() => { });
       }
       if (mountedRef.current) setScanState("scanning");
-<<<<<<< HEAD
       reader.decodeFromStream(stream, videoRef.current, (result) => {
-=======
-      reader.decodeFromStream(stream, videoRef.current, (result, _err) => {
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
         if (!mountedRef.current || foundRef.current) return;
         if (result) handleDetected(result.getText());
       });
@@ -140,10 +128,7 @@ function BarcodeScanner({ onFound, onClose }) {
     foundRef.current = false;
 
     if (!navigator.mediaDevices?.getUserMedia) {
-<<<<<<< HEAD
-=======
       setScanState("unsupported");
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       return () => { mountedRef.current = false; };
     }
 
@@ -331,7 +316,6 @@ export default function AddProduct() {
   const [createdProductResult, setCreatedProductResult] = useState(null);
   const [showJsonInspector, setShowJsonInspector] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
-<<<<<<< HEAD
   const [showVariantNoticeModal, setShowVariantNoticeModal] = useState(false);
 
   const handleAddVariantClick = () => {
@@ -343,8 +327,6 @@ export default function AddProduct() {
       setShowVariantNoticeModal(true);
     }
   };
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 
   // Toast Helper
   const showToast = useCallback((msg) => {
@@ -524,11 +506,7 @@ export default function AddProduct() {
         };
         return updated;
       });
-<<<<<<< HEAD
       showToast(`Barcode scanned: ${digits}`);
-=======
-      showToast(`Barcode scanned: ${sanitized}`);
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     }
     setScanningVariantIndex(null);
   }, [scanningVariantIndex, showToast]);
@@ -691,7 +669,6 @@ export default function AddProduct() {
           </p>
         </div>
 
-<<<<<<< HEAD
         <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
           <button
             type="button"
@@ -733,37 +710,6 @@ export default function AddProduct() {
               </span>
               <span>Product & Variants</span>
             </div>
-=======
-        {/* Stepper indicator */}
-        <div className="inline-flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200/90 shadow-2xs self-start sm:self-auto">
-          <div
-            onClick={() => {
-              if (currentStep === 2) setCurrentStep(1);
-            }}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${currentStep === 1
-              ? "bg-slate-900 text-white"
-              : "text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
-              }`}
-          >
-            <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold bg-white/20">
-              {currentStep === 2 ? "✓" : "1"}
-            </span>
-            <span>Category</span>
-          </div>
-
-          <span className="text-slate-300">→</span>
-
-          <div
-            className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${currentStep === 2
-              ? "bg-slate-900 text-white"
-              : "text-slate-400 bg-slate-50"
-              }`}
-          >
-            <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-700">
-              2
-            </span>
-            <span>Product & Variants</span>
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
           </div>
         </div>
       </div>
@@ -1525,7 +1471,6 @@ export default function AddProduct() {
               </div>
             </div>
 
-<<<<<<< HEAD
             <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2">
               <button
                 type="button"
@@ -1544,13 +1489,6 @@ export default function AddProduct() {
                 type="button"
                 onClick={handleResetForm}
                 className="w-full sm:flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-=======
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={handleResetForm}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold transition-colors"
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
               >
                 + Add Another
               </button>
@@ -1558,11 +1496,7 @@ export default function AddProduct() {
               <button
                 type="button"
                 onClick={() => navigate("/products")}
-<<<<<<< HEAD
                 className="w-full sm:flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer"
-=======
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition-colors"
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
               >
                 View Products →
               </button>
@@ -1571,7 +1505,6 @@ export default function AddProduct() {
         </div>
       )}
 
-<<<<<<< HEAD
       {/* Informational Modal when Add Variant is clicked without saved product */}
       {showVariantNoticeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
@@ -1611,8 +1544,6 @@ export default function AddProduct() {
         </div>
       )}
 
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       {/* ========================================================================= */}
       {/* CATEGORY CREATION MODAL (POST /api/v1/categories)                          */}
       {/* ========================================================================= */}

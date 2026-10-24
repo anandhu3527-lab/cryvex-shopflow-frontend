@@ -879,7 +879,6 @@ export default function BillDetail() {
     }
   };
 
-<<<<<<< HEAD
   // ── Pre-compute receipt row data (CGST / SGST) outside JSX ──
   const billRowData = (bill?.items || []).map((item, idx) => {
     const name = item.item_name || item.product_name || item.product?.name || item.name || "Unknown Product";
@@ -924,8 +923,6 @@ export default function BillDetail() {
     { qty: 0, taxable: 0, cgst: 0, sgst: 0, total: 0 }
   );
 
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   return (
     <div className="max-w-3xl mx-auto space-y-6 pt-2 pb-12">
       {/* Top action bar */}
@@ -1116,7 +1113,6 @@ export default function BillDetail() {
           </div>
         )}
 
-<<<<<<< HEAD
         {/* Item Table — CGST / SGST split */}
         <div>
           <h2 className="text-sm font-bold text-[#102A56] mb-3">Purchased Items</h2>
@@ -1205,90 +1201,6 @@ export default function BillDetail() {
                 </tr>
               </tbody>
 
-=======
-        {/* Item Table */}
-        <div>
-          <h2 className="text-sm font-bold text-[#102A56] mb-3">Purchased Items</h2>
-          <div className="overflow-x-auto rounded-xl border border-[#E2E8F0]">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="bg-[#F7FAFF] text-[#64748B] font-semibold uppercase tracking-wider border-b border-[#E2E8F0]">
-                  <th className="py-3 px-4">Item</th>
-                  <th className="py-3 px-3 text-center">Qty</th>
-                  <th className="py-3 px-3 text-right">Price</th>
-                  <th className="py-3 px-3 text-right">Offer</th>
-                  <th className="py-3 px-3 text-right">Tax (GST)</th>
-                  <th className="py-3 px-4 text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E2E8F0]">
-                {bill.items?.map((item, idx) => {
-                  const name = item.item_name || item.product_name || item.product?.name || item.name || "Unknown Product";
-                  const variantName = item.variant_name || item.variant?.name;
-                  const pkgQty = item.package_quantity || item.variant?.package_quantity;
-                  const pkgUnit = item.unit || item.variant?.unit;
-                  let variantInfo = variantName;
-                  if (!variantInfo && pkgQty && pkgUnit) variantInfo = `${pkgQty} ${pkgUnit}`;
-                  
-                  const displayName = variantInfo ? `${name} (${variantInfo})` : name;
-                  const qty = Number(item.quantity ?? item.qty ?? 1);
-                  const price = Number(item.price ?? item.unit_price ?? item.selling_price ?? 0);
-                  const originalPrice = Number(item.original_price ?? item.regular_price ?? item.mrp ?? 0);
-                  const offerPrice = item.offer_price != null ? Number(item.offer_price) : null;
-                  const hasOffer = (item.has_offer || offerPrice != null) && originalPrice > 0 && originalPrice > price;
-                  const itemDiscount = Number(item.discount_amount ?? item.discount ?? 0);
-                  const perItemSaving = hasOffer ? (originalPrice - price) : 0;
-                  const { taxRate, taxAmount } = getItemTaxDetails(item);
-                  const lineTotal = Number(item.line_total != null && Number(item.line_total) >= 0 ? item.line_total : (price * qty + taxAmount));
-
-                  return (
-                    <tr key={idx} className="hover:bg-[#F5F9FF]/60 transition-colors">
-                      <td className="py-3 px-4 font-semibold text-[#102A56]">
-                        <span>{displayName}</span>
-                      </td>
-                      <td className="py-3 px-3 text-center text-[#64748B]">
-                        {isNaN(qty) ? item.quantity : qty.toString()}
-                      </td>
-                      <td className="py-3 px-3 text-right text-[#64748B]">
-                        {hasOffer ? (
-                          <div>
-                            <span className="line-through text-slate-400 text-[10px]">{formatINRWithPaise(originalPrice)}</span>
-                            <span className="block font-semibold text-emerald-700">{formatINRWithPaise(price)}</span>
-                          </div>
-                        ) : (
-                          <span>{formatINRWithPaise(price)}</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        {hasOffer ? (
-                          <div>
-                            <span className="font-bold text-amber-600">-{formatINRWithPaise(perItemSaving * qty)}</span>
-                            <span className="block text-[10px] text-amber-500 font-semibold">₹{perItemSaving.toFixed(0)}/unit</span>
-                          </div>
-                        ) : itemDiscount > 0 ? (
-                          <span className="font-bold text-amber-600">-{formatINRWithPaise(itemDiscount)}</span>
-                        ) : (
-                          <span className="text-slate-400 text-[11px]">—</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        {taxRate > 0 ? (
-                          <div>
-                            <span className="font-semibold text-slate-800">{formatINRWithPaise(taxAmount)}</span>
-                            <span className="block text-[10px] text-blue-600 font-bold">({taxRate}%)</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 font-medium text-[11px]">0% (₹0.00)</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right font-bold text-[#102A56]">
-                        <span>{formatINRWithPaise(lineTotal)}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
             </table>
           </div>
         </div>

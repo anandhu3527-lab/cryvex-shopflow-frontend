@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useState } from "react";
 import {
   X,
@@ -9,21 +8,6 @@ import {
   Check,
   Copy,
   Plus,
-=======
-import React, { useState } from "react";
-import {
-  X,
-  Box,
-  Layers,
-  Sparkles,
-  Barcode,
-  Tag,
-  ArrowRight,
-  ShieldCheck,
-  Check,
-  Copy,
-  ExternalLink,
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 } from "lucide-react";
 import Product3DViewer, { getCategoryTheme } from "./Product3DViewer";
 import { useNavigate } from "react-router-dom";
@@ -227,19 +211,11 @@ export default function Product3DModal({ product, isOpen, onClose }) {
           </div>
 
           {/* Modal Footer Actions */}
-<<<<<<< HEAD
           <div className="mt-6 pt-4 border-t border-slate-200 flex flex-wrap gap-2.5">
             <button
               type="button"
               onClick={onClose}
               className="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-=======
-          <div className="mt-6 pt-4 border-t border-slate-200 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
             >
               Done Viewing
             </button>
@@ -247,7 +223,6 @@ export default function Product3DModal({ product, isOpen, onClose }) {
               type="button"
               onClick={() => {
                 onClose();
-<<<<<<< HEAD
                 const parentId = product.id || product.product_id;
                 if (parentId) navigate(`/products/${parentId}/variants/new`, { state: { product } });
               }}
@@ -263,11 +238,6 @@ export default function Product3DModal({ product, isOpen, onClose }) {
                 if (product.id) navigate(`/products/${product.id}`);
               }}
               className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/25 hover:from-blue-700 hover:to-indigo-700 transition cursor-pointer"
-=======
-                if (product.id) navigate(`/products/${product.id}`);
-              }}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/25 hover:from-blue-700 hover:to-indigo-700 transition"
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
             >
               <span>Full Details</span>
               <ArrowRight className="h-4 w-4" />

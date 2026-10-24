@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { useState, useMemo, useEffect } from "react";
-=======
-import { useState, useMemo, useEffect, useCallback } from "react";
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 import { useNavigate, Link } from "react-router-dom";
 import { billingDataService } from "../../services/data/billingDataService";
 import { billingApi } from "../../services/api/billingApi";
@@ -741,30 +737,20 @@ export default function Dashboard({ searchTerm = "" }) {
 
       {/* ── 5. OWNER EMPLOYEE MANAGEMENT ── */}
       {role === "OWNER" && (
-<<<<<<< HEAD
         <div className="white-card p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-4">
-=======
-        <div className="white-card p-6">
-          <div className="flex items-center justify-between mb-4">
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
             <div>
               <h2 className="text-base font-extrabold text-[#102A56]">Staff & Cashier Permissions</h2>
               <p className="text-xs text-[#64748B]">Manage counter access for store employees</p>
             </div>
             <button
               onClick={() => setShowAddEmployeeModal(true)}
-<<<<<<< HEAD
               className="btn-secondary text-xs py-2 px-3.5 self-start sm:self-auto shrink-0"
-=======
-              className="btn-secondary text-xs py-2 px-3.5"
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
             >
               + Add Staff Member
             </button>
           </div>
 
-<<<<<<< HEAD
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
             {tenantEmployees && tenantEmployees.length > 0 ? (
               tenantEmployees.map((emp) => {
@@ -796,28 +782,6 @@ export default function Dashboard({ searchTerm = "" }) {
               })
             ) : (
               <p className="text-xs text-[#64748B] col-span-full py-4 text-center">
-=======
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
-            {tenantEmployees && tenantEmployees.length > 0 ? (
-              tenantEmployees.map((emp) => (
-                <div key={emp.id} className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white border border-slate-200/80 text-[#075BFF] font-black flex items-center justify-center shadow-xs">
-                      {emp.name ? emp.name.charAt(0).toUpperCase() : "S"}
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-[#102A56]">{emp.name}</h4>
-                      <p className="text-[10px] text-[#64748B]">{emp.phone_number || emp.phone || emp.email}</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-[#22C55E] border border-emerald-100">
-                    Active
-                  </span>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-[#64748B] col-span-3 py-4 text-center">
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
                 No extra staff members added yet. Store owner currently has primary counter access.
               </p>
             )}

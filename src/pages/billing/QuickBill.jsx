@@ -178,11 +178,7 @@ function normalizeBillingCatalogue(data, categoryList = []) {
 /* ─────────────────────────────────────────────────────────────────────────────
    BARCODE SCANNER MODAL
 ───────────────────────────────────────────────────────────────────────────── */
-<<<<<<< HEAD
 function BarcodeScanner({ onFound, onClose, scanFeedback }) {
-=======
-function BarcodeScanner({ products, onFound, onClose, scanFeedback }) {
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const rafRef = useRef(null);
@@ -633,33 +629,8 @@ export default function QuickBill() {
   const [receivedAmount, setReceivedAmount] = useState("");
   const [paymentMethod,  setPaymentMethod]  = useState("cash");
 
-<<<<<<< HEAD
   /* Payment animation state (reserved for future use) */
 
-=======
-  /* ── Payment Card Slide/Swipe Up Animation ── */
-  const [paymentVisible, setPaymentVisible] = useState(false);
-  const [paymentSettled, setPaymentSettled] = useState(false);
-
-  useEffect(() => {
-    if (items.length > 0) {
-      const reveal = requestAnimationFrame(() => {
-        setPaymentVisible(true);
-        requestAnimationFrame(() => {
-          setPaymentSettled(true);
-        });
-      });
-      return () => cancelAnimationFrame(reveal);
-    } else {
-      const reset = requestAnimationFrame(() => setPaymentSettled(false));
-      const t = setTimeout(() => setPaymentVisible(false), 400);
-      return () => {
-        cancelAnimationFrame(reset);
-        clearTimeout(t);
-      };
-    }
-  }, [items.length]);
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 
   /* ── Barcode scanner ── */
   const [showScanner, setShowScanner] = useState(false);
@@ -844,16 +815,16 @@ export default function QuickBill() {
   }, 0));
 
   const grandTotal = Math.max(0, roundMoney(taxableAmount + estimatedTax));
-  const parsedReceived = receivedAmount === "" ? 0 : Number(receivedAmount);
-  const received = paymentMethod === "kadan" ? 0 : Math.max(0, parsedReceived);
-  const appliedReceived = Math.min(grandTotal, received);
 
-<<<<<<< HEAD
-  // eslint-disable-next-line no-unused-vars
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
+  // A blank or zero Received Amount means no money was collected.
+  // This matches submission: a positive bill with zero received is treated as Kadan.
+  const rawReceivedAmount = receivedAmount.trim() === "" ? 0 : Number(receivedAmount);
+  const received = Math.max(
+    0,
+    Number.isFinite(rawReceivedAmount) ? rawReceivedAmount : 0
+  );
+  const appliedReceived = Math.min(grandTotal, roundMoney(received));
   const creditAmount = Math.max(0, roundMoney(grandTotal - appliedReceived));
-
   const changeDue = paymentMethod === "cash"
     ? Math.max(0, roundMoney(received - grandTotal))
     : 0;
@@ -864,11 +835,7 @@ export default function QuickBill() {
     setTimeout(() => setToast({ msg: "", type: "success" }), 3200);
   }, []);
 
-<<<<<<< HEAD
   const addProduct = (product) => {
-=======
-  const addProduct = useCallback((product) => {
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     setItems((prev) => {
       const ex = prev.find((i) => i.id === product.id);
       if (ex) return prev.map((i) => (i.id === product.id ? { ...i, qty: i.qty + 1 } : i));
@@ -892,11 +859,7 @@ export default function QuickBill() {
         },
       ];
     });
-<<<<<<< HEAD
   };
-=======
-  }, []);
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 
   const updateQty = (id, delta) => {
     setItems((prev) =>
@@ -952,11 +915,7 @@ export default function QuickBill() {
     setCustomerLookup("found");
   };
 
-<<<<<<< HEAD
   const handleBarcodeFound = async (barcode) => {
-=======
-  const handleBarcodeFound = useCallback(async (barcode) => {
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     if (!barcode) return;
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -1039,11 +998,7 @@ export default function QuickBill() {
           showToast(`✓ Product Added\n${productData.name} × 1`, "success");
           
           if (typeof navigator !== "undefined" && navigator.vibrate) {
-<<<<<<< HEAD
             try { navigator.vibrate(50); } catch { /* vibrate not supported */ }
-=======
-            try { navigator.vibrate(50); } catch (_) {}
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
           }
           
           try {
@@ -1064,11 +1019,7 @@ export default function QuickBill() {
             
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.15);
-<<<<<<< HEAD
           } catch { /* audio beep not available */ }
-=======
-          } catch (e) {}
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
         }, 0);
 
         if (ex) {
@@ -1127,18 +1078,9 @@ export default function QuickBill() {
       // ──────────────────────────────────────────────────────────────────────────
       isScanningProcessingRef.current = false;
     }
-<<<<<<< HEAD
   };
 
   // handleAddProductClick: focus search input (called via searchRef.current.focus() inline)
-=======
-  }, [showToast]);
-
-  const handleAddProductClick = useCallback(() => {
-    searchRef.current?.focus();
-    document.querySelector("main")?.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 
   const [successBill, setSuccessBill] = useState(null);
   const [receiptPhone, setReceiptPhone] = useState("");
@@ -1163,52 +1105,37 @@ export default function QuickBill() {
     const name = showCustomer ? (selectedCustomer?.name || customerName).trim().replace(/\s+/g, " ") : "";
     const phone = showCustomer ? customerPhone.replace(/\D/g, "").slice(0, 10) : "";
 
-<<<<<<< HEAD
-    // For Cash/UPI: if user left received-amount blank, treat as fully paid (grandTotal).
-    // For Kadan: paid amount is always 0.
-    const rawParsed = receivedAmount === "" ? 0 : Number(receivedAmount);
-    const parsedReceived =
-      activePaymentMethod !== "kadan" && receivedAmount === ""
-        ? grandTotal                          // blank field = exact payment assumed
-        : rawParsed;
-    const paidAmount = activePaymentMethod === "kadan" ? 0 : parsedReceived;
-=======
-    const parsedReceived = receivedAmount === "" ? 0 : Number(receivedAmount);
-    let paidAmount = 0;
-    if (activePaymentMethod === "kadan") {
-      paidAmount = 0;
-    } else {
-      paidAmount = parsedReceived;
-    }
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
+    // An empty or zero received amount means no money was collected.
+    // Such a bill must be sent as KADAN, never as CASH/UPI with paid_amount=0.
+    // A positive amount retains the cashier's selected payment method.
+    const rawParsed = receivedAmount.trim() === "" ? 0 : Number(receivedAmount);
+    const paidAmount = roundMoney(rawParsed);
 
     if (!Number.isFinite(paidAmount) || paidAmount < 0) {
       showToast("Received amount must be a valid non-negative number.", "error");
       return;
     }
-<<<<<<< HEAD
     if (paidAmount > grandTotal + 0.005) {
-=======
-    if (paidAmount > grandTotal) {
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       showToast("Received amount cannot exceed the final bill total.", "error");
       return;
     }
-    if ((activePaymentMethod === "cash" || activePaymentMethod === "upi") && paidAmount === 0 && grandTotal > 0) {
-      showToast(`Please enter the received amount for ${activePaymentMethod.toUpperCase()} payment, or use Credit (கடன்).`, "error");
+
+    // If nothing was received, classify this as a credit sale so the API does
+    // not receive the invalid combination CASH/UPI + paid_amount=0.
+    const effectivePaymentMethod =
+      grandTotal > 0 && paidAmount <= 0.005 ? "kadan" : activePaymentMethod;
+
+    const outstandingBalance = roundMoney(
+      Math.max(0, grandTotal - Math.min(grandTotal, paidAmount))
+    );
+    const hasOutstandingKadan = outstandingBalance > 0.005;
+
+    // A fully paid bill must not be submitted as KADAN.
+    if (effectivePaymentMethod === "kadan" && grandTotal > 0 && !hasOutstandingKadan) {
+      showToast("The received amount covers the full bill. Select Cash or UPI because no Kadan balance remains.", "error");
       return;
     }
 
-<<<<<<< HEAD
-    // Use a 0.005 tolerance (½ paisa) to avoid floating-point false positives
-    // that would incorrectly classify a fully-paid Cash/UPI bill as having an outstanding Kadan balance.
-    const outstandingBalance = roundMoney(Math.max(0, grandTotal - paidAmount));
-    const hasOutstandingKadan = outstandingBalance > 0.005;
-
-=======
-    const outstandingBalance = roundMoney(grandTotal - paidAmount);
-    const hasOutstandingKadan = outstandingBalance > 0;
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     const hasDiscount = Number(totalDiscount || 0) > 0;
     const requiresCustomer = hasOutstandingKadan || hasDiscount;
 
@@ -1240,7 +1167,7 @@ export default function QuickBill() {
 
     setIsSubmitting(true);
     try {
-      const paymentMethodValue = activePaymentMethod === "kadan" ? "KADAN" : activePaymentMethod.toUpperCase();
+      const paymentMethodValue = effectivePaymentMethod === "kadan" ? "KADAN" : effectivePaymentMethod.toUpperCase();
       const hasSpecificCustomer = Boolean(name && phone);
       const customerNameToSend = hasSpecificCustomer ? name : null;
       const customerPhoneToSend = hasSpecificCustomer ? phone : null;
@@ -1249,21 +1176,27 @@ export default function QuickBill() {
         customer_name: customerNameToSend,
         customer_phone: customerPhoneToSend,
         items: items.map((item) => ({ variant_id: item.variantId, quantity: item.qty })),
-<<<<<<< HEAD
         // Only send the user-entered additional bill-level discount.
         // Item-level offer discounts are already reflected in variant prices that the
         // backend uses when it computes the bill total — sending them again here would
         // cause the backend total to differ from paidAmount, making the backend
         // classify a fully-paid Cash/UPI bill as Kadan/partial.
         discount_amount: Number(billDiscountAmt || 0),
-=======
-        discount_amount: Number(totalDiscount || 0),
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
         paid_amount: paidAmount,
         payment_method: paymentMethodValue,
       });
 
       const billData = result?.data ? result.data : result;
+      // Never show a success receipt if the API returns an error-shaped payload.
+      if (billData?.detail || billData?.error) {
+        const apiMessage =
+          typeof billData.detail === "string"
+            ? billData.detail
+            : typeof billData.error === "string"
+              ? billData.error
+              : "The server rejected the bill.";
+        throw new Error(apiMessage);
+      }
       const billId = billData?.bill_id || billData?.id || null;
       const savedTotalValue = billData?.total_amount ?? billData?.grand_total;
       if (!billId || savedTotalValue === undefined || savedTotalValue === null || !Number.isFinite(Number(savedTotalValue))) {
@@ -1604,11 +1537,7 @@ export default function QuickBill() {
 
   return (
     <>
-<<<<<<< HEAD
       {/* Barcode Scanner Modal */}
-=======
-      {/* ── Barcode Scanner Modal ── */}
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       {showScanner && (
         <BarcodeScanner
           products={catalogue}
@@ -1623,11 +1552,7 @@ export default function QuickBill() {
         />
       )}
 
-<<<<<<< HEAD
       {/* Toast Notification */}
-=======
-      {/* ── Toast ── */}
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       {toast.msg && (
         <div className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 border text-xs sm:text-sm transition-all ${
           toast.type === "error"
@@ -1641,7 +1566,6 @@ export default function QuickBill() {
         </div>
       )}
 
-<<<<<<< HEAD
       {/* Main page wrapper */}
       <div className="space-y-4 max-w-7xl mx-auto pb-12">
 
@@ -2351,17 +2275,21 @@ export default function QuickBill() {
                     className="flex-1 min-w-0 px-3 py-2 text-sm text-right font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 placeholder-slate-400"
                   />
                 </div>
-                {/* Balance Amount — auto-calculated: remaining amount still owed */}
-                {(() => {
-                  const received = receivedAmount === "" ? 0 : Number(receivedAmount);
-                  const balance = Math.max(0, grandTotal - received);
-                  return (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-bold text-rose-700">Balance Amount (&#8377;)</span>
-                      <span className="font-black text-rose-600 text-base">&#8377;{formatINR(balance)}</span>
-                    </div>
-                  );
-                })()}
+                {grandTotal > 0 && appliedReceived <= 0.005 && paymentMethod !== "kadan" && (
+                  <p className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    No amount received. This bill will be recorded as Credit (கடன்).
+                  </p>
+                )}
+                {/* Balance Amount uses the same normalized calculation as submission. */}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-bold text-rose-700">Balance Amount (&#8377;)</span>
+                  <span className="font-black text-rose-600 text-base">&#8377;{formatINR(creditAmount)}</span>
+                </div>
+                {paymentMethod === "kadan" && grandTotal > 0 && creditAmount <= 0.005 && (
+                  <p className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    No Kadan balance remains. Select Cash or UPI to record a fully paid bill.
+                  </p>
+                )}
 
                 {/* Change due */}
                 {paymentMethod === "cash" && changeDue > 0 && (
@@ -2384,654 +2312,6 @@ export default function QuickBill() {
                 <h3 className="text-sm font-black text-slate-900">Payment Method</h3>
               </div>
               <div className="px-4 py-3">
-=======
-      {/* ── Main page wrapper ── */}
-      <div className="space-y-4 max-w-7xl mx-auto relative pb-12">
-        {/* ── Page Header ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1 pb-1">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Billing
-            </h1>
-            <p className="mt-0.5 text-xs sm:text-sm text-slate-500">
-              Fast counter checkout, inventory selection, and instant invoicing.
-            </p>
-            {catalogLoading && <p className="mt-1 text-xs text-blue-600 font-semibold">Loading products from server...</p>}
-            {catalogError && <p className="mt-1 text-xs text-rose-600 font-bold" role="alert">Products: {catalogError}</p>}
-          </div>
-        </div>
-
-        {/* ── Two-column Responsive Layout ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-
-          {/* ══════════════════════════════════════════════════════════════
-              LEFT: ADD PRODUCTS — Search / Scan only (no catalogue grid)
-             ══════════════════════════════════════════════════════════════ */}
-          <div className="lg:col-span-7 space-y-3.5">
-
-            {/* Search & Category Filter Card */}
-            <div ref={searchContainerRef} className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4 sm:p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-black uppercase tracking-wider text-slate-700">Add Products</p>
-                <span className="text-[11px] font-semibold text-slate-400">Search or scan with camera</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-stretch gap-2.5">
-                <div className="relative flex-1">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </span>
-                  <input
-                    ref={searchRef}
-                    id="qb-product-search"
-                    type="text"
-                    placeholder="Type product name, SKU or barcode to search…"
-                    value={productSearch}
-                    onChange={(e) => {
-                      setProductSearch(e.target.value);
-                      setShowProductDrop(true);
-                    }}
-                    onFocus={() => {
-                      if (productSearch.trim() || selectedCategory !== "ALL") {
-                        setShowProductDrop(true);
-                      }
-                    }}
-                    autoComplete="off"
-                    className="w-full pl-9 pr-9 py-3.5 text-sm bg-slate-50/70 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all font-medium"
-                  />
-                  {productSearch && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProductSearch("");
-                        if (selectedCategory === "ALL") setShowProductDrop(false);
-                      }}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  )}
-
-                  {/* Search & Category Filter Dropdown */}
-                  {showProductDrop && (
-                    <div className="absolute z-30 left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden max-h-80 flex flex-col">
-                      {/* Dropdown Header with Category Pills & Close */}
-                      <div className="p-2.5 bg-slate-50 border-b border-slate-200/80 space-y-2 shrink-0">
-                        <div className="flex items-center justify-between px-1">
-                          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                            {selectedCategory === "ALL" ? "All Products" : selectedCategory} ({filteredProducts.length})
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setShowProductDrop(false)}
-                            className="text-xs font-bold text-slate-400 hover:text-slate-700 cursor-pointer px-2 py-0.5 rounded hover:bg-slate-200/60 transition-colors"
-                          >
-                            ✕ Close
-                          </button>
-                        </div>
-                        {/* Inside Dropdown Category Filter Pills */}
-                        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-                          {categories.map((cat) => {
-                            const active = selectedCategory === cat;
-                            return (
-                              <button
-                                key={cat}
-                                type="button"
-                                onClick={() => setSelectedCategory(cat)}
-                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                                  active
-                                    ? "bg-[#102A56] text-white shadow-xs"
-                                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-                                }`}
-                              >
-                                {cat}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Product List */}
-                      <div className="overflow-y-auto divide-y divide-slate-100">
-                        {catalogLoading ? (
-                          <p className="px-4 py-6 text-xs text-slate-400 text-center">Loading products…</p>
-                        ) : filteredProducts.length === 0 ? (
-                          <p className="px-4 py-6 text-xs text-slate-500 text-center font-semibold">
-                            {productSearch.trim()
-                              ? `No products match "${productSearch}"`
-                              : "No products in this category"}
-                          </p>
-                        ) : (
-                          filteredProducts.map((p) => {
-                            const inBill = items.find((it) => it.id === p.id);
-                            const isOutOfStock = p.stock_quantity <= 0;
-                            return (
-                              <button
-                                key={p.id}
-                                type="button"
-                                disabled={isOutOfStock}
-                                onClick={() => {
-                                  addProduct(p);
-                                  if (productSearch.trim()) {
-                                    setProductSearch("");
-                                    setShowProductDrop(false);
-                                  }
-                                }}
-                                className={`w-full text-left px-4 py-2.5 flex items-center justify-between gap-3 transition-colors ${
-                                  isOutOfStock
-                                    ? "opacity-40 cursor-not-allowed bg-slate-50"
-                                    : "hover:bg-blue-50/70 cursor-pointer"
-                                }`}
-                              >
-                                <div className="min-w-0">
-                                  <p className="text-sm font-bold text-slate-900 truncate">{p.name}</p>
-                                  <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">
-                                    {p.unit ? `per ${p.unit}` : (p.sku ? `SKU: ${p.sku}` : "")}
-                                    {isOutOfStock ? " · Out of stock" : p.stock_quantity <= p.low_stock_threshold ? ` · Only ${p.stock_quantity} left` : ""}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  {inBill && (
-                                    <span className="px-1.5 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-black">×{inBill.qty}</span>
-                                  )}
-                                  {p.has_offer && (
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                      Offer
-                                    </span>
-                                  )}
-                                  {p.has_offer && p.regular_price != null && (
-                                    <span className="text-xs text-slate-400 line-through font-medium">
-                                      ₹{formatINR(p.regular_price)}
-                                    </span>
-                                  )}
-                                  <span className="text-sm font-black text-[#102A56]">₹{formatINR(p.price)}</span>
-                                </div>
-                              </button>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Big, Visible Barcode Scanner Button on Right Side */}
-                <button
-                  type="button"
-                  onClick={() => setShowScanner(true)}
-                  className="group inline-flex items-center justify-center gap-2.5 px-5 sm:px-6 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:via-indigo-700 hover:to-blue-800 text-white text-sm font-black shadow-md shadow-blue-500/25 ring-2 ring-blue-400/25 transition-all transform hover:scale-[1.01] active:scale-[0.98] cursor-pointer shrink-0"
-                  title="Open Camera Barcode Scanner"
-                >
-                  <svg className="w-5 h-5 text-white group-hover:rotate-6 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0V8a4 4 0 00-4-4H8a4 4 0 00-4 4v12a4 4 0 004 4h8a4 4 0 004-4v-4" />
-                  </svg>
-                  <span>Scan Barcode</span>
-                </button>
-              </div>
-
-              {/* Categories list in the card */}
-              {categories.length > 1 && (
-                <div className="space-y-1.5 pt-1 border-t border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Categories</p>
-                    {selectedCategory !== "ALL" && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedCategory("ALL");
-                          setShowProductDrop(false);
-                        }}
-                        className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer"
-                      >
-                        Reset Filter
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                    {categories.map((cat) => {
-                      const isSelected = selectedCategory === cat && showProductDrop;
-                      return (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => {
-                            if (selectedCategory === cat && showProductDrop) {
-                              setShowProductDrop(false);
-                            } else {
-                              setSelectedCategory(cat);
-                              setShowProductDrop(true);
-                            }
-                          }}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                            isSelected
-                              ? "bg-[#102A56] text-white shadow-xs"
-                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                          }`}
-                        >
-                          {cat}
-                          {cat !== "ALL" && (
-                            <span
-                              className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
-                                isSelected ? "bg-white/20 text-white" : "bg-slate-200/80 text-slate-500"
-                              }`}
-                            >
-                              {catalogue.filter((p) => p.category === cat).length}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <p className="text-[11px] text-slate-400 font-medium pt-0.5">
-                Or use <strong className="text-slate-500">Scan Barcode</strong> above to add items instantly.
-              </p>
-            </div>
-          </div>
-
-          {/* ══════════════════════════════════════════════════════════════
-              RIGHT: CURRENT BILL & CHECKOUT (lg:col-span-5)
-             ══════════════════════════════════════════════════════════════ */}
-          <div className="lg:col-span-5 space-y-4">
-
-            {/* ── Bill Items Card Container ── */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4 space-y-3.5">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-black text-slate-900">Current Bill</h2>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
-                    {items.length} {items.length === 1 ? "item" : "items"}
-                  </span>
-                </div>
-                {items.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setItems([])}
-                    className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
-                  >
-                    Clear All
-                  </button>
-                )}
-              </div>
-
-              {/* Selected Items: Distinct Card Per Item */}
-              {items.length === 0 ? (
-                <div className="py-10 text-center space-y-2">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                  </div>
-                  <p className="text-xs font-bold text-slate-700">No items selected yet</p>
-                  <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
-                    Search a product by name or scan its barcode to add it to the bill.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-0.5">
-                  {items.map((item) => {
-                    const lineDiscount = Math.min(item.price * item.qty, Math.max(0, Number(item.disc) || 0));
-                    const lineTotal = Math.max(0, item.price * item.qty - lineDiscount);
-
-                    return (
-                      <div
-                        key={item.id}
-                        className="relative p-3 rounded-xl bg-slate-50/70 border border-slate-200/80 shadow-2xs space-y-2.5 hover:border-slate-300 transition-colors"
-                      >
-                        {/* Top: Name, Unit Price, and Visible × Remove Button */}
-                        {(() => {
-                          const pricing = resolveBillItemPricing(item);
-                          return (
-                            <div className="flex items-start justify-between gap-2 pr-7">
-                              <div>
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <h4 className="text-xs font-black text-slate-900 leading-snug">
-                                    {item.name}
-                                  </h4>
-                                  {pricing.hasOffer && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                      Offer Applied
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-[11px] text-slate-500 font-semibold mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                  <span>Rate: ₹{formatINR(pricing.effectivePrice)}</span>
-                                  {pricing.hasOffer && (
-                                    <span className="text-slate-400 line-through font-normal">
-                                      ₹{formatINR(pricing.regularPrice)}
-                                    </span>
-                                  )}
-                                  {item.unit ? <span>• per {item.unit}</span> : null}
-                                  {pricing.totalSavings > 0 && (
-                                    <span className="text-[10px] font-bold text-emerald-600">
-                                      (Saved ₹{formatINR(pricing.totalSavings)})
-                                    </span>
-                                  )}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })()}
-
-                        {/* Top-Right Remove Button */}
-                        <button
-                          type="button"
-                          onClick={() => removeItem(item.id)}
-                          className="absolute top-2 right-2 w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-100/70 flex items-center justify-center transition-colors cursor-pointer"
-                          title="Remove item from bill"
-                          aria-label={`Remove ${item.name} from bill`}
-                        >
-                          <span className="text-base font-bold leading-none">✕</span>
-                        </button>
-
-                        {/* Middle: Quantity Controls & Line Discount */}
-                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/60">
-                          {/* Quantity Controls */}
-                          <div>
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                              Quantity
-                            </label>
-                            <div className="flex items-center rounded-lg border border-slate-300/80 bg-white p-0.5">
-                              <button
-                                type="button"
-                                onClick={() => updateQty(item.id, -1)}
-                                className="w-8 h-8 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-black text-base cursor-pointer active:scale-95"
-                                aria-label="Decrease quantity"
-                              >
-                                −
-                              </button>
-                              <input
-                                type="number"
-                                min="1"
-                                value={item.qty}
-                                onChange={(e) => setItemQty(item.id, e.target.value)}
-                                className="w-full text-center text-xs font-black text-slate-900 bg-transparent outline-none"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => updateQty(item.id, 1)}
-                                className="w-8 h-8 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-black text-base cursor-pointer active:scale-95"
-                                aria-label="Increase quantity"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Line Discount Input */}
-                          <div>
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                              Discount (₹)
-                            </label>
-                            <div className="relative">
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-rose-600 font-bold text-xs pointer-events-none">
-                                -₹
-                              </span>
-                              <input
-                                type="number"
-                                min="0"
-                                value={item.disc === 0 ? "" : item.disc}
-                                onChange={(e) => updateDisc(item.id, e.target.value)}
-                                placeholder="0"
-                                className="w-full pl-7 pr-2 py-1.5 text-xs font-bold text-rose-600 bg-rose-50/50 border border-rose-200 rounded-lg outline-none focus:border-rose-400 text-right"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Bottom: Line Total */}
-                        <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs">
-                          <span className="text-slate-500 font-semibold">Line Amount:</span>
-                          <span className="font-black text-sm text-slate-900">
-                            ₹{formatINR(lineTotal)}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* ── Customer Details Card ── */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
-              {/* Card Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                    Customer Information
-                  </h3>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    showCustomer
-                      ? "text-blue-700 bg-blue-50 border border-blue-200"
-                      : "text-slate-600 bg-slate-100"
-                  }`}>
-                    {showCustomer ? "Specific Customer" : "Walk-in Customer"}
-                  </span>
-                </div>
-
-                {/* iOS-style On/Off Toggle Switch */}
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={showCustomer}
-                  aria-controls="customer-info-panel"
-                  onClick={() => setShowCustomer((v) => !v)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none cursor-pointer ${
-                    showCustomer ? "bg-blue-600" : "bg-slate-200"
-                  }`}
-                  title={showCustomer ? "Switch to Walk-in Customer" : "Add customer details"}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition-transform duration-200 ease-in-out ${
-                      showCustomer ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {!showCustomer && (
-                <div className="px-4 py-3 bg-slate-50/60 flex items-center justify-between text-xs text-slate-500">
-                  <span className="flex items-center gap-2 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    Walk-in Customer &bull; No customer details required
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomer(true)}
-                    className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
-                  >
-                    + Add Customer
-                  </button>
-                </div>
-              )}
-
-              <div id="customer-info-panel" className={`px-4 pb-4 space-y-3 ${showCustomer ? "block" : "hidden"}`}>
-                  {selectedCustomer && (
-                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 space-y-1.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-[10px] font-bold text-emerald-700">✓ Customer Identified</p>
-                          <p className="text-xs font-black text-slate-900">{selectedCustomer.name}</p>
-                          <p className="text-xs font-mono text-slate-600">{customerPhone}</p>
-                        </div>
-                        <span className="text-[9px] font-bold text-blue-700 border border-blue-200 bg-blue-50 px-1.5 py-0.5 rounded uppercase">
-                          {selectedCustomer.type || "Customer"}
-                        </span>
-                      </div>
-                      {selectedCustomer.kadanBalance !== null && selectedCustomer.kadanBalance !== undefined && (
-                        <div className="pt-1.5 border-t border-slate-200/70 flex items-center justify-between text-xs">
-                          <span className="text-slate-500 font-semibold">Existing Credit (Kadan):</span>
-                          <span className="font-bold text-rose-600">₹{formatINR(selectedCustomer.kadanBalance)}</span>
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={changeCustomer}
-                        className="text-[11px] font-bold text-blue-700 hover:underline cursor-pointer pt-1 block"
-                      >
-                        Change Customer
-                      </button>
-                    </div>
-                  )}
-
-                  {!selectedCustomer && (
-                    <div className="space-y-2.5">
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                          Phone Number {paymentMethod === "kadan" ? <span className="text-rose-600">*</span> : <span className="text-slate-400">(optional)</span>}
-                        </label>
-                        <input
-                          ref={customerPhoneRef}
-                          type="tel"
-                          inputMode="numeric"
-                          maxLength={10}
-                          placeholder="10-digit mobile number"
-                          value={customerPhone}
-                          onChange={handlePhoneChange}
-                          onBlur={() => setPhoneTouched(true)}
-                          className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium ${
-                            phoneValidationError ? "border-rose-400 bg-rose-50/30" : "border-slate-200"
-                          }`}
-                        />
-                        {phoneValidationError && (
-                          <span className="mt-1 block text-[10px] font-bold text-rose-600" role="alert">
-                            {phoneValidationError}
-                          </span>
-                        )}
-                        {customerLoading && <p className="text-[10px] text-blue-600 font-semibold mt-1">Checking customer registry...</p>}
-                      </div>
-
-                      {customerLookup === "multiple" && (
-                        <div className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
-                          <p className="px-3 py-1.5 text-[10px] font-bold text-slate-500 bg-slate-50">Select customer:</p>
-                          {customerMatches.map((c) => (
-                            <button
-                              key={c.id}
-                              type="button"
-                              onClick={() => selectCustomer(c)}
-                              className="w-full flex items-center justify-between p-2 text-left hover:bg-blue-50 text-xs"
-                            >
-                              <span className="font-bold text-slate-800">{c.name}</span>
-                              <span className="text-[11px] text-slate-500">{c.phone}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                          Customer Name {paymentMethod === "kadan" ? <span className="text-rose-600">*</span> : <span className="text-slate-400">(optional)</span>}
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Enter customer name"
-                          value={customerName}
-                          onChange={handleCustomerNameChange}
-                          onBlur={() => setNameTouched(true)}
-                          className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium ${
-                            nameValidationError ? "border-rose-400 bg-rose-50/30" : "border-slate-200"
-                          }`}
-                        />
-                        {nameValidationError && (
-                          <span className="mt-1 block text-[10px] font-bold text-rose-600" role="alert">
-                            {nameValidationError}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-              </div>
-            </div>
-
-            {/* ── Bill Summary & Checkout Card ── */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4 sm:p-5 space-y-4">
-              <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider pb-2 border-b border-slate-100">
-                Billing Summary
-              </h3>
-
-              {/* Subtotal */}
-              <div className="flex justify-between items-center text-xs text-slate-600 font-semibold">
-                <span>Subtotal ({items.length} items):</span>
-                <span className="font-black text-slate-900 text-sm">₹{formatINR(subtotal)}</span>
-              </div>
-
-              {/* Bill-Level Discount */}
-              <div className="flex justify-between items-center text-xs text-slate-600 font-semibold">
-                <div className="flex items-center gap-1.5">
-                  <span>Additional Discount:</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextType = discountType === "amount" ? "percent" : "amount";
-                      setDiscountType(nextType);
-                    }}
-                    className="px-1.5 py-0.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700 transition-colors cursor-pointer"
-                    title="Toggle ₹ / %"
-                  >
-                    {discountType === "amount" ? "- ₹" : "- %"}
-                  </button>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-rose-600 font-bold text-xs">-</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={discountValue === 0 ? "" : discountValue}
-                    onChange={(e) => setDiscountValue(e.target.value)}
-                    placeholder="0"
-                    className="w-20 text-right text-xs font-bold text-rose-600 bg-rose-50/50 border border-rose-200 rounded-lg px-2 py-1 outline-none focus:border-rose-400"
-                  />
-                </div>
-              </div>
-
-              {/* Total Offer Savings Display */}
-              {totalOfferSavings > 0 && (
-                <div className="flex justify-between items-center text-xs font-bold text-emerald-700 bg-emerald-50 p-2 rounded-xl border border-emerald-200">
-                  <span>Offer Savings:</span>
-                  <span>-₹{formatINR(totalOfferSavings)}</span>
-                </div>
-              )}
-
-              {/* Total Discount Display in RED */}
-              {totalDiscount > 0 && (
-                <div className="flex justify-between items-center text-xs font-bold text-rose-600 bg-rose-50 p-2 rounded-xl border border-rose-200">
-                  <span>Total Discount Deducted:</span>
-                  <span>-₹{formatINR(totalDiscount)}</span>
-                </div>
-              )}
-
-              {/* Tax estimate from product tax rates; backend values are final after save. */}
-              {estimatedTax > 0 && (
-                <div className="flex justify-between items-center text-xs text-slate-600 font-semibold">
-                  <span>Estimated GST / Tax:</span>
-                  <span className="font-black text-slate-900 text-sm">₹{formatINR(estimatedTax)}</span>
-                </div>
-              )}
-
-              {/* Grand Total Card */}
-              <div className="rounded-2xl p-4 bg-[#0B192C] text-white shadow-md border border-[#1E3E62] flex justify-between items-center">
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-200 block">
-                    Payable Amount
-                  </span>
-                  <span className="text-xs text-slate-300">Final bill total</span>
-                </div>
-                <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                  ₹{formatINR(grandTotal)}
-                </span>
-              </div>
-
-              {/* ── Payment Methods: Exactly Cash, UPI, and Credit (கடன்) ── */}
-              <div className="space-y-2 pt-1">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                  Payment Method
-                </p>
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
                 <div className="grid grid-cols-3 gap-2">
                   {PAYMENT_METHODS.map((pm) => {
                     const isSelected = paymentMethod === pm.key;
@@ -3043,7 +2323,6 @@ export default function QuickBill() {
                           setPaymentMethod(pm.key);
                           if (pm.key === "kadan") setShowCustomer(true);
                         }}
-<<<<<<< HEAD
                         className={`relative py-3 px-2 rounded-xl border-2 transition-all text-center flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
                           isSelected
                             ? pm.key === "kadan"
@@ -3064,19 +2343,6 @@ export default function QuickBill() {
                           ? pm.key === "kadan" ? "text-rose-600" : pm.key === "cash" ? "text-emerald-600" : "text-blue-600"
                           : "text-slate-400"
                         }>
-=======
-                        className={`p-3 rounded-xl border transition-all text-center flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
-                          isSelected
-                            ? pm.key === "kadan"
-                              ? "bg-rose-50 border-rose-500 text-rose-700 shadow-xs ring-2 ring-rose-400/20"
-                              : pm.key === "cash"
-                                ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-xs ring-2 ring-emerald-400/20"
-                                : "bg-blue-50 border-blue-600 text-blue-800 shadow-xs ring-2 ring-blue-500/20"
-                            : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
-                        }`}
-                      >
-                        <div className={isSelected ? (pm.key === "kadan" ? "text-rose-600" : pm.key === "cash" ? "text-emerald-600" : "text-blue-600") : "text-slate-400"}>
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
                           {pm.icon}
                         </div>
                         <span className={`text-xs font-black ${isSelected ? "text-slate-900" : "text-slate-700"}`}>
@@ -3087,7 +2353,6 @@ export default function QuickBill() {
                   })}
                 </div>
               </div>
-<<<<<<< HEAD
             </div>
 
             {/* ── GENERATE & PRINT BILL ── */}
@@ -3128,89 +2393,6 @@ export default function QuickBill() {
 
         </div>{/* end 2-column grid */}
 
-=======
-
-              {/* ── Amount Entry: Received & Credit / Change Display ── */}
-              <div className="space-y-3 pt-2 border-t border-slate-100">
-                {/* Received Amount Input */}
-                <div className="flex items-center justify-between text-xs text-slate-700 font-bold">
-                  <div>
-                    <span>Received Amount</span>
-                    {paymentMethod === "kadan" && (
-                      <span className="block text-[10px] text-slate-400 font-normal">Advance payment if any</span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs font-bold">
-                      ₹
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={receivedAmount}
-                      onChange={(e) => setReceivedAmount(e.target.value)}
-                      placeholder={paymentMethod === "kadan" ? "0.00" : String(grandTotal)}
-                      className="w-32 pl-7 pr-3 py-2 text-sm text-right font-black text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Outstanding Credit Amount (in RED) */}
-                {(paymentMethod === "kadan" || creditAmount > 0) && (
-                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-bold text-rose-800 block">Credit Amount (கடன்)</span>
-                      <span className="text-[10px] text-rose-600">Added to customer ledger</span>
-                    </div>
-                    <span className="text-base font-black text-rose-600">
-                      ₹{formatINR(creditAmount)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Change Due (in GREEN) for Cash */}
-                {paymentMethod === "cash" && changeDue > 0 && (
-                  <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
-                    <span className="font-bold text-emerald-800">Change Due to Customer:</span>
-                    <span className="text-sm font-black text-emerald-600">
-                      ₹{formatINR(changeDue)}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* ── Actions: Generate Bill and Cancel ── */}
-              <div className="space-y-2 pt-2">
-                <button
-                  type="button"
-                  onClick={handleGenerateBill}
-                  disabled={isSubmitting || items.length === 0}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-black flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Saving Bill...
-                    </span>
-                  ) : (
-                    <span>Generate & Print Bill</span>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer transition-colors"
-                >
-                  Cancel / Reset Bill
-                </button>
-              </div>
-            </div>
-
-          </div>{/* end RIGHT column */}
-
-        </div>{/* end Two-column layout */}
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       </div>
     </>
   );

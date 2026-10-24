@@ -6,21 +6,14 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { navigationItems } from "./navigationItems";
-<<<<<<< HEAD
 import { useAuth } from "../../context/AuthContext";
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 
 export default function MobileFabNavigation({ allowedItems }) {
   const location = useLocation();
   const navigate = useNavigate();
-<<<<<<< HEAD
   const { currentUser } = useAuth();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const isOwner = currentUser?.role === "OWNER";
-=======
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 
   // Main 4 slots + center button
   const mainNav = [
@@ -41,7 +34,6 @@ export default function MobileFabNavigation({ allowedItems }) {
     )},
   ];
 
-<<<<<<< HEAD
   const sourceItems = allowedItems || navigationItems.filter((item) => {
     if (!isOwner) {
       if (item.label === "Add Employee") return false;
@@ -51,9 +43,6 @@ export default function MobileFabNavigation({ allowedItems }) {
   });
 
   const moreItems = sourceItems.filter(
-=======
-  const moreItems = (allowedItems || navigationItems).filter(
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     (item) => !["Dashboard", "Billing", "Products", "Daily Price Update"].includes(item.label)
   );
 

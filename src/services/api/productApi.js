@@ -84,7 +84,6 @@ export const productApi = {
   },
 
   /**
-<<<<<<< HEAD
    * Add Variant to existing Product
    * POST /api/v1/products/{product_id}/variants
    */
@@ -93,8 +92,6 @@ export const productApi = {
   },
 
   /**
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
    * Update Variant Inventory / Stock Quantity
    * PATCH /api/v1/products/variants/{variant_id}/inventory
    */

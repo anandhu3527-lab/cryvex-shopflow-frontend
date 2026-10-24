@@ -1,23 +1,14 @@
-<<<<<<< HEAD
-=======
 import React from "react";
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 import { useNavigate } from "react-router-dom";
 import {
   Package,
   Barcode,
   ArrowRight,
   Sparkles,
-<<<<<<< HEAD
   Plus,
 } from "lucide-react";
 import { getCategoryTheme } from "./categoryTheme";
 import Stock3DSymbol from "./Stock3DSymbol";
-=======
-} from "lucide-react";
-import { getCategoryTheme } from "./categoryTheme";
-import Stock3DSymbol, { Stock3DBadge } from "./Stock3DSymbol";
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
@@ -30,10 +21,7 @@ export default function ProductCard({ product }) {
 
   const isOutOfStock = status.toLowerCase().includes("out") || stockQuantity <= 0;
   const isLowStock = !isOutOfStock && (status.toLowerCase().includes("low") || (stockQuantity > 0 && stockQuantity <= 10));
-<<<<<<< HEAD
-=======
   const isHighStock = !isOutOfStock && !isLowStock;
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 
   // Extract barcode and SKU
   const barcode = product?.searchableBarcodes?.split(" ")[0] || "";
@@ -170,20 +158,14 @@ export default function ProductCard({ product }) {
           </div>
         </div>
 
-<<<<<<< HEAD
         {/* Card Footer Actions: View Details & Add Variant */}
         <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-2">
-=======
-        {/* Card Footer Action: View Details */}
-        <div className="mt-4 pt-3 border-t border-slate-100">
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               handleCardClick();
             }}
-<<<<<<< HEAD
             className="w-full sm:flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 py-2.5 text-xs font-bold text-white transition-all shadow-xs cursor-pointer"
           >
             <span>Details</span>
@@ -200,13 +182,6 @@ export default function ProductCard({ product }) {
             <Plus className="h-3.5 w-3.5" />
             <span>Add Variant</span>
           </button>
-=======
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-blue-600 hover:to-indigo-600 py-2.5 text-xs font-bold text-white transition-all shadow-xs cursor-pointer"
-          >
-            <span>View Details</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
         </div>
       </div>
     </div>

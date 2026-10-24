@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import {
@@ -23,32 +22,21 @@ import { formatINRWithPaise } from "../../utils/formatting/currency";
 
 export default function DailyPriceUpdate() {
   const navigate = useNavigate();
-=======
-import { useState, useEffect, useMemo, useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { productApi } from "../../services/api/productApi";
-
-export default function DailyPriceUpdate() {
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   const [searchParams] = useSearchParams();
   const targetProductId = searchParams.get("productId") || "";
   const targetVariantId = searchParams.get("variantId") || "";
   const targetProductName = searchParams.get("productName") || "";
   const handledTargetRef = useRef("");
-<<<<<<< HEAD
 
   const { currentTenant, currentUser } = useAuth();
   const tenantId = currentTenant?.id || currentUser?.tenant_id || "default_tenant";
 
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-<<<<<<< HEAD
   // Daily Price History State from localStorage
   const [historyData, setHistoryData] = useState(() =>
     dailyPriceHistoryService.getTodayHistory(tenantId)
@@ -73,8 +61,6 @@ export default function DailyPriceUpdate() {
   const [showProductSelectModal, setShowProductSelectModal] = useState(false);
   const [productSelectQuery, setProductSelectQuery] = useState("");
 
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   // Edit Modal State
   const [editingVariant, setEditingVariant] = useState(null);
   const [editSellingPrice, setEditSellingPrice] = useState("");
@@ -83,7 +69,6 @@ export default function DailyPriceUpdate() {
   const [isSaving, setIsSaving] = useState(false);
   const [modalError, setModalError] = useState("");
 
-<<<<<<< HEAD
   // Refresh history handler
   const refreshHistory = useCallback(() => {
     setHistoryData(dailyPriceHistoryService.getTodayHistory(tenantId));
@@ -124,11 +109,6 @@ export default function DailyPriceUpdate() {
 
 
   // Fetch product catalog
-=======
-  // Changed Products tracking
-  const [changedProducts, setChangedProducts] = useState([]);
-
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   useEffect(() => {
     let isMounted = true;
     const fetchProducts = async () => {
@@ -151,13 +131,9 @@ export default function DailyPriceUpdate() {
       }
     };
     fetchProducts();
-<<<<<<< HEAD
     return () => {
       isMounted = false;
     };
-=======
-    return () => { isMounted = false; };
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   }, []);
 
   const variants = useMemo(() => {
@@ -179,7 +155,6 @@ export default function DailyPriceUpdate() {
   const visibleVariants = useMemo(() => {
     const query = searchTerm.toLowerCase().trim();
     if (!query) return variants;
-<<<<<<< HEAD
     return variants.filter(
       (v) =>
         (v.productName || "").toLowerCase().includes(query) ||
@@ -213,15 +188,6 @@ export default function DailyPriceUpdate() {
     });
   };
 
-=======
-    return variants.filter((v) =>
-      (v.productName || "").toLowerCase().includes(query) ||
-      (v.barcode || "").toLowerCase().includes(query) ||
-      (v.sku || "").toLowerCase().includes(query)
-    );
-  }, [variants, searchTerm]);
-
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   const handleOpenEdit = (variant) => {
     setEditingVariant(variant);
     setEditSellingPrice(variant.selling_price !== undefined ? String(variant.selling_price) : "");
@@ -230,11 +196,7 @@ export default function DailyPriceUpdate() {
     setModalError("");
   };
 
-<<<<<<< HEAD
   // When opened from a stock alert, focus the exact variant/product once products load
-=======
-  // When opened from a stock alert, focus the exact variant/product once products load.
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   useEffect(() => {
     if (!targetProductId && !targetVariantId && !targetProductName) return;
     const targetKey = `${targetProductId}:${targetVariantId}:${targetProductName}`;
@@ -246,21 +208,16 @@ export default function DailyPriceUpdate() {
       const name = String(variant.productName || "").toLowerCase();
       if (targetVariantId && variantId === String(targetVariantId)) return true;
       if (targetProductId && productId === String(targetProductId)) return true;
-<<<<<<< HEAD
       return (
         !targetProductId &&
         !targetVariantId &&
         targetProductName &&
         name === targetProductName.toLowerCase()
       );
-=======
-      return !targetProductId && !targetVariantId && targetProductName && name === targetProductName.toLowerCase();
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     });
 
     if (target) {
       handledTargetRef.current = targetKey;
-<<<<<<< HEAD
       const term = target.barcode || target.sku || target.productName || targetProductName;
       const timer = setTimeout(() => {
         setSearchTerm(term);
@@ -272,12 +229,6 @@ export default function DailyPriceUpdate() {
         setSearchTerm(targetProductName);
       }, 0);
       return () => clearTimeout(timer);
-=======
-      setSearchTerm(target.barcode || target.sku || target.productName || targetProductName);
-      handleOpenEdit(target);
-    } else if (targetProductName) {
-      setSearchTerm(targetProductName);
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     }
   }, [variants, targetProductId, targetVariantId, targetProductName]);
 
@@ -323,7 +274,6 @@ export default function DailyPriceUpdate() {
 
       await productApi.updateVariantInventory(editingVariant.id, payload);
 
-<<<<<<< HEAD
       // Record price change into persistent browser storage only if price actually changed
       const recorded = dailyPriceHistoryService.recordPriceChange({
         tenantId,
@@ -336,12 +286,6 @@ export default function DailyPriceUpdate() {
       });
 
       // Update product list in memory
-=======
-      const previousPrice = editingVariant.selling_price;
-      const updatedTimestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-      // Update product list state
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       setProducts((prev) =>
         prev.map((p) => {
           if (Array.isArray(p.variants)) {
@@ -356,7 +300,6 @@ export default function DailyPriceUpdate() {
         })
       );
 
-<<<<<<< HEAD
       // Refresh today's history state
       refreshHistory();
 
@@ -371,40 +314,11 @@ export default function DailyPriceUpdate() {
       setModalError(
         err?.message || "Failed to save price changes. Please check backend connection."
       );
-=======
-      // Track in Changed Products without duplicates
-      setChangedProducts((prev) => {
-        const existingIdx = prev.findIndex((item) => item.id === editingVariant.id);
-        const record = {
-          id: editingVariant.id,
-          productName: editingVariant.productName,
-          previousPrice: existingIdx >= 0 ? prev[existingIdx].previousPrice : previousPrice,
-          newPrice: selling,
-          newOffer: offer,
-          timestamp: updatedTimestamp,
-          status: "Saved",
-        };
-
-        if (existingIdx >= 0) {
-          const updated = [...prev];
-          updated[existingIdx] = record;
-          return updated;
-        }
-        return [record, ...prev];
-      });
-
-      setSuccessMessage(`✓ Price updated for "${editingVariant.productName}"`);
-      setTimeout(() => setSuccessMessage(""), 4000);
-      handleCloseEdit();
-    } catch (err) {
-      setModalError(err?.message || "Failed to save price changes. Please check backend connection.");
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     } finally {
       setIsSaving(false);
     }
   };
 
-<<<<<<< HEAD
   const todayFormatted = useMemo(() => formatDate(new Date()), []);
 
   // Display limits: Desktop shows 3 initially, Mobile shows 2 initially
@@ -438,30 +352,10 @@ export default function DailyPriceUpdate() {
           <Link
             to="/products/add"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
-=======
-  return (
-    <div className="max-w-7xl mx-auto space-y-5 pt-2 pb-12 px-2 sm:px-4">
-      {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#0B192C] tracking-tight">
-            Daily Price Update
-          </h1>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Click any product card to update selling price and stock in real time.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Link
-            to="/products/add"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
           >
             <span className="text-sm leading-none font-bold">+</span>
             <span>Add Product</span>
           </Link>
-<<<<<<< HEAD
 
           {/* Add Variant Button with Product Selection Modal Trigger */}
           <button
@@ -474,55 +368,38 @@ export default function DailyPriceUpdate() {
             <span>Add Variant</span>
           </button>
 
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
           <div className="relative w-full sm:w-64">
             <input
               type="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search product, barcode..."
-<<<<<<< HEAD
               className="w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-8 pr-3 py-2 text-xs font-medium text-slate-900 focus:bg-white focus:border-blue-500 focus:outline-none"
             />
             <Search className="absolute left-2.5 top-2.5 text-slate-400 h-3.5 w-3.5" />
-=======
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-8 pr-3 py-2 text-xs font-medium text-slate-900 focus:bg-white focus:border-blue-500 focus:outline-none"
-            />
-            <span className="absolute left-2.5 top-2.5 text-slate-400 text-xs">🔍</span>
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
           </div>
         </div>
       </div>
 
       {/* Global Alerts */}
       {error && (
-<<<<<<< HEAD
         <div
           className="text-xs font-semibold text-rose-600 bg-rose-50 p-3.5 rounded-xl border border-rose-200"
           role="alert"
         >
-=======
-        <div className="text-xs font-semibold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-200" role="alert">
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
           {error}
         </div>
       )}
       {successMessage && (
-<<<<<<< HEAD
         <div
           className="text-xs font-bold text-emerald-700 bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex items-center gap-2"
           role="status"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-=======
-        <div className="text-xs font-bold text-emerald-700 bg-emerald-50 p-3 rounded-xl border border-emerald-200 flex items-center gap-2" role="status">
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
           <span>{successMessage}</span>
         </div>
       )}
 
-<<<<<<< HEAD
       {/* SUMMARY METRICS TILES */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         {/* Distinct Products Changed */}
@@ -759,94 +636,17 @@ export default function DailyPriceUpdate() {
               );
               const isLowStock = item.stock_quantity <= (item.low_stock_threshold || 5);
 
-=======
-      {/* CHANGED PRODUCTS SECTION */}
-      {changedProducts.length > 0 && (
-        <div className="bg-white rounded-2xl border border-emerald-200/90 p-4 shadow-xs">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <h2 className="text-sm font-black text-slate-900">
-                Changed Products
-              </h2>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black">
-                {changedProducts.length}
-              </span>
-            </div>
-            <span className="text-[11px] text-slate-400 font-medium">Updated this session</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-            {changedProducts.map((cp) => (
-              <div
-                key={cp.id}
-                className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/40 border border-emerald-100 text-xs"
-              >
-                <div className="min-w-0 pr-2">
-                  <p className="font-bold text-slate-900 truncate">{cp.productName}</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">
-                    Prev: <span className="line-through">₹{Number(cp.previousPrice).toFixed(2)}</span> · {cp.timestamp}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-black text-emerald-700 text-sm">
-                    ₹{Number(cp.newPrice).toFixed(2)}
-                  </p>
-                  <span className="inline-block text-[10px] font-bold text-emerald-600 bg-emerald-100/80 px-1.5 py-0.2 rounded">
-                    {cp.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 2 x N PRODUCT GRID */}
-      {loading ? (
-        <div className="py-16 text-center text-sm font-medium text-slate-400">
-          <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          Loading inventory products...
-        </div>
-      ) : visibleVariants.length === 0 ? (
-        <div className="py-16 text-center bg-white rounded-2xl border border-slate-200 p-8">
-          <p className="text-sm font-bold text-slate-700">No products found</p>
-          <p className="text-xs text-slate-400 mt-1">Try adjusting your search query or add new products.</p>
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-center justify-between mb-3 px-1">
-            <span className="text-xs font-bold text-slate-600">
-              All Products ({visibleVariants.length})
-            </span>
-            <span className="text-[11px] text-slate-400 font-medium">Tap any card to edit price</span>
-          </div>
-
-          {/* 2-column N-row grid */}
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
-            {visibleVariants.map((item) => {
-              const isChanged = changedProducts.some((cp) => cp.id === item.id);
-              const isLowStock = item.stock_quantity <= (item.low_stock_threshold || 5);
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
               return (
                 <div
                   key={item.id}
                   onClick={() => handleOpenEdit(item)}
                   className={`flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl bg-white border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 text-left select-none relative ${
-<<<<<<< HEAD
                     isChangedToday
-=======
-                    isChanged
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
                       ? "border-emerald-300 ring-2 ring-emerald-100"
                       : "border-slate-200/90 hover:border-blue-400"
                   }`}
                 >
-<<<<<<< HEAD
                   {isChangedToday && (
-=======
-                  {isChanged && (
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
                     <span className="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">
                       Updated
                     </span>
@@ -864,7 +664,6 @@ export default function DailyPriceUpdate() {
                   <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-end justify-between gap-1">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-<<<<<<< HEAD
                         Selling Price
                       </p>
                       <p className="text-sm sm:text-base font-black text-slate-900">
@@ -873,16 +672,6 @@ export default function DailyPriceUpdate() {
                       {item.offer_price > 0 && (
                         <p className="text-[10px] font-bold text-rose-500">
                           Offer: {formatINRWithPaise(item.offer_price)}
-=======
-                        Price
-                      </p>
-                      <p className="text-sm sm:text-base font-black text-slate-900">
-                        ₹{Number(item.selling_price || 0).toFixed(2)}
-                      </p>
-                      {item.offer_price > 0 && (
-                        <p className="text-[10px] font-bold text-rose-500">
-                          Offer: ₹{Number(item.offer_price).toFixed(2)}
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
                         </p>
                       )}
                     </div>
@@ -903,7 +692,6 @@ export default function DailyPriceUpdate() {
                       >
                         Edit Price ✎
                       </button>
-<<<<<<< HEAD
                       <button
                         type="button"
                         onClick={(e) => {
@@ -919,25 +707,16 @@ export default function DailyPriceUpdate() {
                       >
                         + Add Variant
                       </button>
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
                     </div>
                   </div>
                 </div>
               );
             })}
           </div>
-<<<<<<< HEAD
         )}
       </section>
 
       {/* COMPACT EDIT MODAL */}
-=======
-        </div>
-      )}
-
-      {/* COMPACT EDIT MODAL (Subtle ~40% backdrop) */}
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       {editingVariant && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs"
@@ -1055,7 +834,6 @@ export default function DailyPriceUpdate() {
           </div>
         </div>
       )}
-<<<<<<< HEAD
 
       {/* PRODUCT SELECTION DIALOG FOR ADD VARIANT */}
       {showProductSelectModal && (
@@ -1148,8 +926,6 @@ export default function DailyPriceUpdate() {
           </div>
         </div>
       )}
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     </div>
   );
 }

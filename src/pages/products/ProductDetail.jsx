@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-<<<<<<< HEAD
 import { ArrowLeft, Barcode, Copy, Check, Plus } from "lucide-react";
 import { productApi } from "../../services/api/productApi";
 import { productDataService } from "../../services/data/productDataService";
@@ -8,13 +7,6 @@ import { dailyPriceHistoryService } from "../../services/data/dailyPriceHistoryS
 import { billingApi } from "../../services/api/billingApi";
 import { useNotifications } from "../../context/NotificationContext";
 import { useAuth } from "../../context/AuthContext";
-=======
-import { Box, Sparkles, Package, Layers, ShieldCheck, ArrowLeft, Barcode, Copy, Check } from "lucide-react";
-import { productApi } from "../../services/api/productApi";
-import { productDataService } from "../../services/data/productDataService";
-import { billingApi } from "../../services/api/billingApi";
-import { useNotifications } from "../../context/NotificationContext";
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 import { getCategoryTheme } from "./components/categoryTheme";
 
 const TAX_RATES = [
@@ -118,16 +110,10 @@ export default function ProductDetail() {
   const { id, productId } = useParams();
   const effectiveId = productId || id;
   const { refreshNotifications } = useNotifications();
-<<<<<<< HEAD
   const { currentTenant, currentUser } = useAuth();
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(() => Boolean(effectiveId));
   const [loadError, setLoadError] = useState(() => (!effectiveId ? "No product ID specified." : ""));
-=======
-  const [product, setProduct] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingVariant, setEditingVariant] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -139,11 +125,7 @@ export default function ProductDetail() {
   const [editStockQuantity, setEditStockQuantity] = useState("");
   const [editError, setEditError] = useState("");
   const [toastMessage, setToastMessage] = useState("");
-<<<<<<< HEAD
   const [selectedVariantIdx] = useState(0);
-=======
-  const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
   const [copiedBarcode, setCopiedBarcode] = useState(false);
 
   const handleCopyBarcode = (val) => {
@@ -183,18 +165,8 @@ export default function ProductDetail() {
 
   useEffect(() => {
     let isMounted = true;
-<<<<<<< HEAD
     if (!effectiveId) return;
 
-=======
-    if (!effectiveId) {
-      setLoadError("No product ID specified.");
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
     fetchProductData(effectiveId)
       .then((result) => {
         if (!isMounted) return;
@@ -217,7 +189,6 @@ export default function ProductDetail() {
   };
 
   const [salesData, setSalesData] = useState(null);
-<<<<<<< HEAD
   const [isSalesLoading, setIsSalesLoading] = useState(false);
 
   useEffect(() => {
@@ -226,18 +197,6 @@ export default function ProductDetail() {
 
     const fetchSales = async () => {
       if (isMounted) setIsSalesLoading(true);
-=======
-  const [isSalesLoading, setIsSalesLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (!product || !product.variants.length) {
-      setIsSalesLoading(false);
-      return;
-    }
-
-    const fetchSales = async () => {
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       try {
         // Build a map: variantId → { qty: 0, label: "100 g" }
         const variantMap = new Map();
@@ -259,11 +218,7 @@ export default function ProductDetail() {
           try {
             const detail = await billingApi.getBillById(billId);
             return detail?.data || detail;
-<<<<<<< HEAD
           } catch {
-=======
-          } catch (e) {
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
             return bill;
           }
         }));
@@ -287,11 +242,7 @@ export default function ProductDetail() {
           setSalesData({ totalUnitsSold, variantSales });
           setIsSalesLoading(false);
         }
-<<<<<<< HEAD
       } catch {
-=======
-      } catch (error) {
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
         if (isMounted) setIsSalesLoading(false);
       }
     };
@@ -358,7 +309,6 @@ export default function ProductDetail() {
       await productDataService.updateVariantInventory(variantId, {
         stock_quantity: stockQuantity,
       });
-<<<<<<< HEAD
 
       // Record price change if selling_price or offer_price changed
       dailyPriceHistoryService.recordPriceChange({
@@ -371,8 +321,6 @@ export default function ProductDetail() {
         offerPriceAfter: offerPrice,
       });
 
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       await reloadProduct();
       refreshNotifications();
       setIsEditOpen(false);
@@ -411,10 +359,7 @@ export default function ProductDetail() {
   const lowStock = getNumber(firstVariant.lowStock);
   const stockStatus = getStockStatus(stock, lowStock);
   const theme = getCategoryTheme(product.category);
-<<<<<<< HEAD
   const targetProductId = product?.id || product?.product_id || effectiveId;
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 pb-12">
@@ -476,7 +421,6 @@ export default function ProductDetail() {
             )}
           </div>
         </div>
-<<<<<<< HEAD
         <div className="flex flex-wrap items-center gap-2.5">
           <Link
             to={`/products/${targetProductId}/variants/new`}
@@ -491,13 +435,6 @@ export default function ProductDetail() {
             type="button"
             onClick={() => openEdit(firstVariant)}
             className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-700 hover:to-indigo-700 active:scale-95"
-=======
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => openEdit(firstVariant)}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-700 hover:to-indigo-700"
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652l-9.193 9.193a4.5 4.5 0 0 1-1.897 1.13L7.5 16.5l.726-2.61a4.5 4.5 0 0 1 1.13-1.897l7.506-7.506Zm0 0L19.5 7.125M18 14.25v4.125A2.625 2.625 0 0 1 15.375 21H5.625A2.625 2.625 0 0 1 3 18.375V8.625A2.625 2.625 0 0 1 5.625 6H9.75" />
@@ -579,7 +516,6 @@ export default function ProductDetail() {
 
 
       <section className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden" aria-labelledby="product-variants-title">
-<<<<<<< HEAD
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 id="product-variants-title" className="text-sm font-bold uppercase tracking-wide text-slate-800">
@@ -611,13 +547,6 @@ export default function ProductDetail() {
               <span>Add First Variant</span>
             </Link>
           </div>
-=======
-        <div className="p-5 sm:p-6 border-b border-slate-100">
-          <h2 id="product-variants-title" className="text-sm font-bold uppercase tracking-wide text-slate-800">Product Variants</h2>
-        </div>
-        {product.variants.length === 0 ? (
-          <div className="p-6 text-center text-sm text-slate-500">No variants available</div>
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">

@@ -1,3 +1,4 @@
+
 import { Outlet, Routes, Route, Navigate, useParams } from "react-router-dom";
 import MerchantLayout from "../components/layout/MerchantLayout";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
@@ -24,15 +25,11 @@ import DailyPriceUpdate from "../pages/products/DailyPriceUpdate";
 import BillHistory from "../pages/billing/BillHistory";
 import BillDetail from "../pages/billing/BillDetail";
 import AddProduct from "../pages/products/AddProduct";
-<<<<<<< HEAD
 import AddProductVariant from "../pages/products/AddProductVariant";
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
 import AddEmployee from "../pages/employees/AddEmployee";
 
 /**
- * PersistentLayout — rendered ONCE and kept mounted for all protected routes.
- * Sidebar, Header and MobileFabNavigation remain in the tree between navigations.
+ * Persistent layout for authenticated merchant routes.
  */
 function PersistentLayout() {
   return (
@@ -45,7 +42,9 @@ function PersistentLayout() {
   );
 }
 
-/** Owner-only persistent layout */
+/**
+ * Owner-only layout.
+ */
 function OwnerOnlyLayout() {
   return (
     <ProtectedRoute allowedRoles={["OWNER"]}>
@@ -57,7 +56,9 @@ function OwnerOnlyLayout() {
   );
 }
 
-/** CustomerDetail needs key-based remount when customer changes */
+/**
+ * Remount customer details when the customer ID changes.
+ */
 function CustomerDetailPage() {
   const { customerId } = useParams();
   return <CustomerDetail key={customerId} />;
@@ -84,36 +85,43 @@ export default function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/setup" element={<Navigate to="/register" replace />} />
       <Route path="/signup" element={<Navigate to="/register" replace />} />
-      <Route path="/sales-reports" element={<Navigate to="/reports" replace />} />
-      <Route path="/price-update" element={<Navigate to="/daily-price-update" replace />} />
+      <Route
+        path="/sales-reports"
+        element={<Navigate to="/reports" replace />}
+      />
+      <Route
+        path="/price-update"
+        element={<Navigate to="/daily-price-update" replace />}
+      />
 
-      {/* Protected merchant routes — persistent shared layout */}
+      {/* Protected merchant routes */}
       <Route element={<PersistentLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/add" element={<AddProduct />} />
-<<<<<<< HEAD
-        <Route path="/products/:productId/variants/new" element={<AddProductVariant />} />
-        <Route path="/products/variants/new" element={<AddProductVariant />} />
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
+        <Route
+          path="/products/:productId/variants/new"
+          element={<AddProductVariant />}
+        />
+        <Route
+          path="/products/variants/new"
+          element={<AddProductVariant />}
+        />
         <Route path="/products/detail" element={<ProductDetail />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/products/:productId" element={<ProductDetail />} />
-        <Route path="/daily-price-update" element={<DailyPriceUpdate />} />
+        <Route
+          path="/daily-price-update"
+          element={<DailyPriceUpdate />}
+        />
         <Route path="/quick-bill" element={<QuickBill />} />
         <Route path="/bill-history" element={<BillHistory />} />
         <Route path="/bills/:id" element={<BillDetail />} />
-<<<<<<< HEAD
-=======
-        <Route path="/report" element={<Navigate to="/reports" replace />} />
-        <Route path="/reports" element={<ReportsHub />} />
-        <Route path="/reports/monthly" element={<MonthlyReport />} />
-        <Route path="/reports/weekly" element={<WeeklyReport />} />
-        <Route path="/reports/daily" element={<DailyReport />} />
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
         <Route path="/customers" element={<Customers />} />
-        <Route path="/customers/:customerId" element={<CustomerDetailPage />} />
+        <Route
+          path="/customers/:customerId"
+          element={<CustomerDetailPage />}
+        />
         <Route path="/kadan" element={<Kadan />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
@@ -121,14 +129,14 @@ export default function AppRoutes() {
       {/* Owner-only routes */}
       <Route element={<OwnerOnlyLayout />}>
         <Route path="/employees/add" element={<AddEmployee />} />
-<<<<<<< HEAD
-        <Route path="/report" element={<Navigate to="/reports" replace />} />
+        <Route
+          path="/report"
+          element={<Navigate to="/reports" replace />}
+        />
         <Route path="/reports" element={<ReportsHub />} />
         <Route path="/reports/monthly" element={<MonthlyReport />} />
         <Route path="/reports/weekly" element={<WeeklyReport />} />
         <Route path="/reports/daily" element={<DailyReport />} />
-=======
->>>>>>> 0779c977551ab0c427eb4ebd82b89d18448dd602
       </Route>
 
       {/* Fallback */}
