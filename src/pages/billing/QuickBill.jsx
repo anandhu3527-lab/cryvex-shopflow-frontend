@@ -816,8 +816,8 @@ export default function QuickBill() {
 
   const grandTotal = Math.max(0, roundMoney(taxableAmount + estimatedTax));
 
-  // A blank or zero Received Amount means no money was collected.
-  // This matches submission: a positive bill with zero received is treated as Kadan.
+  // Blank/zero received amount means no money has been collected.
+  // Any positive outstanding balance is automatically recorded as Kadan.
   const rawReceivedAmount = receivedAmount.trim() === "" ? 0 : Number(receivedAmount);
   const received = Math.max(
     0,
@@ -825,7 +825,15 @@ export default function QuickBill() {
   );
   const appliedReceived = Math.min(grandTotal, roundMoney(received));
   const creditAmount = Math.max(0, roundMoney(grandTotal - appliedReceived));
-  const changeDue = paymentMethod === "cash"
+  const PAYMENT_TOLERANCE = 0.005;
+  const hasOutstandingKadan =
+    grandTotal > PAYMENT_TOLERANCE && creditAmount > PAYMENT_TOLERANCE;
+  const effectivePaymentMethod = hasOutstandingKadan
+    ? "kadan"
+    : grandTotal <= PAYMENT_TOLERANCE && paymentMethod === "kadan"
+      ? "cash"
+      : paymentMethod;
+  const changeDue = effectivePaymentMethod === "cash"
     ? Math.max(0, roundMoney(received - grandTotal))
     : 0;
 
@@ -1100,62 +1108,68 @@ export default function QuickBill() {
       return;
     }
     const activePaymentMethod = paymentMethod || "cash";
+    const name = showCustomer
+      ? (selectedCustomer?.name || customerName).trim().replace(/\s+/g, " ")
+      : "";
+    const phone = showCustomer
+      ? customerPhone.replace(/\D/g, "").slice(0, 10)
+      : "";
 
-    // If customer toggle is off or fields are empty, treat as Walk-in Customer
-    const name = showCustomer ? (selectedCustomer?.name || customerName).trim().replace(/\s+/g, " ") : "";
-    const phone = showCustomer ? customerPhone.replace(/\D/g, "").slice(0, 10) : "";
-
-    // An empty or zero received amount means no money was collected.
-    // Such a bill must be sent as KADAN, never as CASH/UPI with paid_amount=0.
-    // A positive amount retains the cashier's selected payment method.
     const rawParsed = receivedAmount.trim() === "" ? 0 : Number(receivedAmount);
-    const paidAmount = roundMoney(rawParsed);
-
-    if (!Number.isFinite(paidAmount) || paidAmount < 0) {
+    if (!Number.isFinite(rawParsed) || rawParsed < 0) {
       showToast("Received amount must be a valid non-negative number.", "error");
       return;
     }
+
+    const paidAmount = roundMoney(rawParsed);
     if (paidAmount > grandTotal + 0.005) {
       showToast("Received amount cannot exceed the final bill total.", "error");
       return;
     }
 
-    // If nothing was received, classify this as a credit sale so the API does
-    // not receive the invalid combination CASH/UPI + paid_amount=0.
-    const effectivePaymentMethod =
-      grandTotal > 0 && paidAmount <= 0.005 ? "kadan" : activePaymentMethod;
-
     const outstandingBalance = roundMoney(
       Math.max(0, grandTotal - Math.min(grandTotal, paidAmount))
     );
-    const hasOutstandingKadan = outstandingBalance > 0.005;
+    const hasOutstandingKadan =
+      grandTotal > 0.005 && outstandingBalance > 0.005;
+    const effectivePaymentMethod = hasOutstandingKadan
+      ? "kadan"
+      : grandTotal <= 0.005 && activePaymentMethod === "kadan"
+        ? "cash"
+        : activePaymentMethod;
 
-    // A fully paid bill must not be submitted as KADAN.
-    if (effectivePaymentMethod === "kadan" && grandTotal > 0 && !hasOutstandingKadan) {
-      showToast("The received amount covers the full bill. Select Cash or UPI because no Kadan balance remains.", "error");
+    if (
+      effectivePaymentMethod === "kadan" &&
+      grandTotal > 0.005 &&
+      !hasOutstandingKadan
+    ) {
+      showToast(
+        "The full bill has been paid. Select Cash or UPI because no Kadan balance remains.",
+        "error"
+      );
       return;
     }
 
-    const hasDiscount = Number(totalDiscount || 0) > 0;
-    const requiresCustomer = hasOutstandingKadan || hasDiscount;
-
-    if (requiresCustomer) {
+    if (hasOutstandingKadan) {
       setNameTouched(true);
       setPhoneTouched(true);
-      if (!name || !phone) {
-        const reason = hasOutstandingKadan ? "an outstanding balance (Kadan)" : "a bill discount";
-        showToast(`Customer name and 10-digit phone number are required because this bill has ${reason}.`, "error");
+
+      if (!name) {
+        showToast("Customer name is required for a Kadan balance.", "error");
         setShowCustomer(true);
         return;
       }
       if (phoneInputInvalid || !/^\d{10}$/.test(phone)) {
-        showToast("Valid 10-digit Indian phone number is required.", "error");
+        showToast("A valid 10-digit phone number is required for Kadan.", "error");
         setShowCustomer(true);
         return;
       }
     } else if (showCustomer && (name || phone)) {
       if (!name || !phone) {
-        showToast("Customer name and phone number must be provided together, or leave both empty for Walk-in Customer.", "error");
+        showToast(
+          "Enter both customer name and phone number, or leave both empty.",
+          "error"
+        );
         return;
       }
       if (phoneInputInvalid || !/^\d{10}$/.test(phone)) {
@@ -1167,7 +1181,7 @@ export default function QuickBill() {
 
     setIsSubmitting(true);
     try {
-      const paymentMethodValue = effectivePaymentMethod === "kadan" ? "KADAN" : effectivePaymentMethod.toUpperCase();
+      const paymentMethodValue = activePaymentMethod === "kadan" ? "KADAN" : activePaymentMethod.toUpperCase();
       const hasSpecificCustomer = Boolean(name && phone);
       const customerNameToSend = hasSpecificCustomer ? name : null;
       const customerPhoneToSend = hasSpecificCustomer ? phone : null;
@@ -1187,16 +1201,6 @@ export default function QuickBill() {
       });
 
       const billData = result?.data ? result.data : result;
-      // Never show a success receipt if the API returns an error-shaped payload.
-      if (billData?.detail || billData?.error) {
-        const apiMessage =
-          typeof billData.detail === "string"
-            ? billData.detail
-            : typeof billData.error === "string"
-              ? billData.error
-              : "The server rejected the bill.";
-        throw new Error(apiMessage);
-      }
       const billId = billData?.bill_id || billData?.id || null;
       const savedTotalValue = billData?.total_amount ?? billData?.grand_total;
       if (!billId || savedTotalValue === undefined || savedTotalValue === null || !Number.isFinite(Number(savedTotalValue))) {
@@ -1290,13 +1294,21 @@ export default function QuickBill() {
     requestAnimationFrame(() => customerPhoneRef.current?.focus());
   };
 
-  const phoneValidationError = phoneTouched && (
-    phoneInputInvalid ||
-    ((customerPhone.length > 0 || paymentMethod === "kadan") && !/^\d{10}$/.test(customerPhone))
-  ) ? "Phone number must contain exactly 10 digits." : "";
+  const customerDetailsRequired = hasOutstandingKadan;
+  const phoneValidationError =
+    phoneTouched &&
+    (
+      phoneInputInvalid ||
+      (
+        (customerPhone.length > 0 || customerDetailsRequired) &&
+        !/^\d{10}$/.test(customerPhone)
+      )
+    )
+      ? "Phone number must contain exactly 10 digits."
+      : "";
   const nameValidationError = nameInputInvalid
     ? "Name can contain only letters and spaces."
-    : paymentMethod === "kadan" && nameTouched && !customerName.trim()
+    : customerDetailsRequired && nameTouched && !customerName.trim()
       ? "Customer name is required for Kadan credit."
       : "";
 
@@ -1640,7 +1652,7 @@ export default function QuickBill() {
 
               {/* Search Dropdown */}
               {showProductDrop && (
-                <div className="absolute z-30 left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden max-h-80 flex flex-col">
+                <div className="absolute z-30 left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[min(75vh,560px)] flex flex-col">
                   <div className="p-2.5 bg-slate-50 border-b border-slate-200/80 space-y-2 shrink-0">
                     <div className="flex items-center justify-between px-1">
                       <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
@@ -1649,7 +1661,7 @@ export default function QuickBill() {
                       <button
                         type="button"
                         onClick={() => setShowProductDrop(false)}
-                        className="text-xs font-bold text-slate-400 hover:text-slate-700 cursor-pointer px-2 py-0.5 rounded hover:bg-slate-200/60 transition-colors"
+                        className="text-xs font-extrabold text-white bg-rose-600 hover:bg-rose-700 px-3 py-1.5 rounded-lg shadow-sm transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-400"
                       >
                         &#10005; Close
                       </button>
@@ -1674,7 +1686,7 @@ export default function QuickBill() {
                       })}
                     </div>
                   </div>
-                  <div className="overflow-y-auto divide-y divide-slate-100">
+                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain divide-y divide-slate-100">
                     {catalogLoading ? (
                       <p className="px-4 py-6 text-xs text-slate-400 text-center">Loading products&hellip;</p>
                     ) : filteredProducts.length === 0 ? (
@@ -1706,7 +1718,7 @@ export default function QuickBill() {
                             }`}
                           >
                             <div className="min-w-0">
-                              <p className="text-sm font-bold text-slate-900 truncate">{p.name}</p>
+                              <p className="text-sm font-bold text-slate-900 whitespace-normal break-words">{p.name}</p>
                               <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">
                                 {p.unit ? `per ${p.unit}` : (p.sku ? `SKU: ${p.sku}` : "")}
                                 {isOutOfStock ? " · Out of stock" : p.stock_quantity <= p.low_stock_threshold ? ` · Only ${p.stock_quantity} left` : ""}
@@ -1807,7 +1819,9 @@ export default function QuickBill() {
               <button
                 type="button"
                 onClick={() => setItems([])}
-                className="flex items-center gap-1.5 text-[11px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer"
+                title="Clear all selected products"
+                aria-label="Clear all selected products"
+                className="flex items-center justify-center p-1.5 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -2109,7 +2123,7 @@ export default function QuickBill() {
                         {/* Customer Name */}
                         <div>
                           <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                            Customer Name {paymentMethod === "kadan" ? <span className="text-rose-600">*</span> : <span className="text-slate-400">(optional)</span>}
+                            Customer Name {customerDetailsRequired ? <span className="text-rose-600">*</span> : <span className="text-slate-400">(optional)</span>}
                           </label>
                           <input
                             type="text"
@@ -2131,7 +2145,7 @@ export default function QuickBill() {
                         {/* Phone Number */}
                         <div>
                           <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                            Phone Number {paymentMethod === "kadan" ? <span className="text-rose-600">*</span> : <span className="text-slate-400">(optional)</span>}
+                            Phone Number {customerDetailsRequired ? <span className="text-rose-600">*</span> : <span className="text-slate-400">(optional)</span>}
                           </label>
                           <input
                             ref={customerPhoneRef}
@@ -2209,7 +2223,7 @@ export default function QuickBill() {
                       className="px-1.5 py-0.5 rounded border border-slate-200 bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700 transition-colors cursor-pointer"
                       title="Toggle ₹ / %"
                     >
-                      {discountType === "amount" ? "- &#8377;" : "- %"}
+                      {discountType === "amount" ? "₹" : "%"}
                     </button>
                   </div>
                   <div className="flex items-center gap-1">
@@ -2275,11 +2289,6 @@ export default function QuickBill() {
                     className="flex-1 min-w-0 px-3 py-2 text-sm text-right font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 placeholder-slate-400"
                   />
                 </div>
-                {grandTotal > 0 && appliedReceived <= 0.005 && paymentMethod !== "kadan" && (
-                  <p className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                    No amount received. This bill will be recorded as Credit (கடன்).
-                  </p>
-                )}
                 {/* Balance Amount uses the same normalized calculation as submission. */}
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-bold text-rose-700">Balance Amount (&#8377;)</span>
